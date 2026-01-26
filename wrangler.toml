@@ -1,5 +1,4 @@
 name = "retireonsol"
-main = "dist/index.html"
 compatibility_date = "2026-01-26"
 
 [assets]

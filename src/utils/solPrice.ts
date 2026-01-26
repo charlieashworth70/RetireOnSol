@@ -4,7 +4,7 @@
 
 const COINGECKO_API = 'https://api.coingecko.com/api/v3/simple/price';
 const CACHE_KEY = 'retireonsol_sol_price';
-const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION_MS = 60 * 1000; // 1 minute
 
 export interface PriceData {
   price: number;

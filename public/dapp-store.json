@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1.0",
+  "name": "RetireOnSol",
+  "short_description": "SOL accumulation & DCA calculator",
+  "long_description": "Plan your SOL accumulation journey with RetireOnSol. Calculate future portfolio values using multiple growth models (CAGR, Power Law, S-Curve, Rainbow), visualize your DCA strategy, and connect your wallet to see your current holdings. Features live SOL price updates, shareable projection images, and comparison charts across all models.",
+  "website": "https://retireonsol.com",
+  "app_url": "https://retireonsol.com",
+  "solana_mobile_dapp_publisher_portal": {
+    "google_store_package": "",
+    "google_store_id": ""
+  },
+  "media": {
+    "icon_urls": {
+      "default": "https://retireonsol.com/icons/icon-512.png"
+    },
+    "hero_urls": {
+      "default": "https://retireonsol.com/images/hero.png"
+    },
+    "screenshot_urls": [
+      "https://retireonsol.com/images/screenshot-1.png",
+      "https://retireonsol.com/images/screenshot-2.png",
+      "https://retireonsol.com/images/screenshot-3.png"
+    ]
+  },
+  "release": {
+    "address": "",
+    "version": "1.0.0"
+  },
+  "platforms": {
+    "web": true,
+    "android": false,
+    "ios": false
+  },
+  "category": "defi",
+  "creator": {
+    "name": "",
+    "website": ""
+  }
+}

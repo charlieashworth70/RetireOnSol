@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D0D0D"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="chart" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#14F195"/>
+      <stop offset="100%" style="stop-color:#9945FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9945FF"/>
+      <stop offset="100%" style="stop-color:#14F195"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Grid pattern -->
+  <g stroke="rgba(153,69,255,0.15)" stroke-width="1">
+    <!-- Vertical lines -->
+    <line x1="100" y1="80" x2="100" y2="550"/>
+    <line x1="200" y1="80" x2="200" y2="550"/>
+    <line x1="300" y1="80" x2="300" y2="550"/>
+    <line x1="400" y1="80" x2="400" y2="550"/>
+    <line x1="500" y1="80" x2="500" y2="550"/>
+    <line x1="600" y1="80" x2="600" y2="550"/>
+    <!-- Horizontal lines -->
+    <line x1="60" y1="150" x2="620" y2="150"/>
+    <line x1="60" y1="250" x2="620" y2="250"/>
+    <line x1="60" y1="350" x2="620" y2="350"/>
+    <line x1="60" y1="450" x2="620" y2="450"/>
+  </g>
+
+  <!-- Growth chart -->
+  <path d="M 80 500 Q 150 480 220 440 T 350 320 T 480 180 T 600 100"
+        fill="none"
+        stroke="url(#chart)"
+        stroke-width="8"
+        stroke-linecap="round"/>
+
+  <!-- Area fill under curve -->
+  <path d="M 80 500 Q 150 480 220 440 T 350 320 T 480 180 T 600 100 L 600 520 L 80 520 Z"
+        fill="url(#chart)"
+        opacity="0.2"/>
+
+  <!-- Data points -->
+  <circle cx="80" cy="500" r="8" fill="#14F195"/>
+  <circle cx="220" cy="440" r="8" fill="#14F195"/>
+  <circle cx="350" cy="320" r="8" fill="#14F195"/>
+  <circle cx="480" cy="180" r="8" fill="#9945FF"/>
+  <circle cx="600" cy="100" r="10" fill="#9945FF"/>
+
+  <!-- SOL coin with glow -->
+  <circle cx="540" cy="140" r="50" fill="url(#accent)" opacity="0.3"/>
+  <circle cx="540" cy="140" r="40" fill="url(#accent)"/>
+  <text x="540" y="158"
+        font-family="Arial, sans-serif"
+        font-size="45"
+        font-weight="bold"
+        fill="white"
+        text-anchor="middle">$</text>
+
+  <!-- Right side content -->
+  <!-- App name -->
+  <text x="850" y="200"
+        font-family="Arial, sans-serif"
+        font-size="72"
+        font-weight="bold"
+        fill="white"
+        text-anchor="middle">RetireOnSol</text>
+
+  <!-- Tagline -->
+  <text x="850" y="270"
+        font-family="Arial, sans-serif"
+        font-size="28"
+        fill="#888888"
+        text-anchor="middle">Plan Your SOL Accumulation Journey</text>
+
+  <!-- Feature badges -->
+  <rect x="680" y="320" width="160" height="45" rx="22" fill="rgba(153,69,255,0.3)" stroke="#9945FF" stroke-width="2"/>
+  <text x="760" y="350"
+        font-family="Arial, sans-serif"
+        font-size="18"
+        fill="#9945FF"
+        text-anchor="middle">Live SOL Price</text>
+
+  <rect x="860" y="320" width="180" height="45" rx="22" fill="rgba(20,241,149,0.3)" stroke="#14F195" stroke-width="2"/>
+  <text x="950" y="350"
+        font-family="Arial, sans-serif"
+        font-size="18"
+        fill="#14F195"
+        text-anchor="middle">Growth Models</text>
+
+  <rect x="680" y="385" width="180" height="45" rx="22" fill="rgba(153,69,255,0.3)" stroke="#9945FF" stroke-width="2"/>
+  <text x="770" y="415"
+        font-family="Arial, sans-serif"
+        font-size="18"
+        fill="#9945FF"
+        text-anchor="middle">DCA Calculator</text>
+
+  <rect x="880" y="385" width="160" height="45" rx="22" fill="rgba(20,241,149,0.3)" stroke="#14F195" stroke-width="2"/>
+  <text x="960" y="415"
+        font-family="Arial, sans-serif"
+        font-size="18"
+        fill="#14F195"
+        text-anchor="middle">Connect Wallet</text>
+
+  <!-- Bottom tagline -->
+  <text x="850" y="520"
+        font-family="Arial, sans-serif"
+        font-size="22"
+        fill="#666666"
+        text-anchor="middle">CAGR • Power Law • S-Curve • Rainbow Models</text>
+</svg>

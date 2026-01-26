@@ -16,7 +16,8 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
   // Use Phantom's public RPC (free and reliable)
   const endpoint = useMemo(() => 'https://solana-mainnet.phantom.app/YBPpkkN4g91xDiAnTE9r0RcMkjg0sKUIWvAfoFVJ', []);
 
-  // Empty array = auto-detect wallets via Wallet Standard (avoids duplicate key warnings)
+  // Empty array = use Wallet Standard auto-detection
+  // This allows any wallet (Phantom, Solflare, Backpack, Seeker, etc.) to connect
   const wallets = useMemo(() => [], []);
 
   return (

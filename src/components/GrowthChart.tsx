@@ -60,10 +60,7 @@ export function GrowthChart({ projections }: GrowthChartProps) {
         >
           {useLogScale ? 'Log Scale' : 'Linear Scale'}
         </button>
-        <span className="scale-hint">
-          {useLogScale ? 'Power law appears as straight line' : 'Shows absolute growth'}
-        </span>
-      </div>
+              </div>
       <ResponsiveContainer width="100%" height={350}>
         <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />

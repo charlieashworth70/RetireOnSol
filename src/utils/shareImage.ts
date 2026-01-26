@@ -227,7 +227,7 @@ export async function generateShareImage(options: ShareImageOptions): Promise<Bl
   // Branding
   ctx.fillStyle = '#9945FF';
   ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText('retireonsol.com', canvas.width / 2, 785);
+  ctx.fillText('retireonsol.uk', canvas.width / 2, 785);
 
   // Convert to blob
   return new Promise((resolve) => {

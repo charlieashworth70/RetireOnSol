@@ -1,2 +1,6 @@
 name = "retireonsol"
-pages_build_output_dir = "dist"
+main = "dist/index.html"
+compatibility_date = "2026-01-26"
+
+[assets]
+directory = "dist"

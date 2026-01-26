@@ -1,0 +1,58 @@
+publisher:
+  name: RetireOnSol
+  website: https://retireonsol.uk
+  email: cpbooth@gmail.com
+  support_email: cpbooth@gmail.com
+app:
+  name: RetireOnSol
+  address: Be9VhWdTKnFcjqmj2gHz4b9pZCR8kPaY78SrXtyx5vcS
+  android_package: uk.retireonsol.twa
+  urls:
+    license_url: https://retireonsol.uk/terms
+    copyright_url: https://retireonsol.uk
+    privacy_policy_url: https://retireonsol.uk/privacy
+    website: https://retireonsol.uk
+  media:
+    - purpose: icon
+      uri: android/assets/icon-512.png
+release:
+  address: GMVBPQBsHow1dSPHoFuDZdFD8U5c3g7LaiMUTGzVFQ3U
+  media:
+    - purpose: icon
+      uri: android/assets/icon-512.png
+    - purpose: banner
+      uri: android/assets/banner.png
+    - purpose: screenshot
+      uri: android/assets/screenshot-1.png
+    - purpose: screenshot
+      uri: android/assets/screenshot-2.png
+    - purpose: screenshot
+      uri: android/assets/screenshot-3.png
+    - purpose: screenshot
+      uri: android/assets/screenshot-4.png
+  files:
+    - purpose: install
+      uri: android/RetireOnSol-v1.0.0-final.apk
+  catalog:
+    en-US:
+      name: RetireOnSol
+      short_description: SOL DCA calculator
+      long_description: Plan your SOL accumulation journey with RetireOnSol. Calculate future portfolio values using multiple growth models (CAGR, Power Law, S-Curve, Rainbow), visualize your DCA strategy, and connect your wallet to see your current holdings. Features live SOL price updates, shareable projection images, and comparison charts across all models.
+      new_in_version: Initial release with multiple growth models and DCA projections
+      saga_features: ''
+  android_details:
+    cert_fingerprint: 3bd5b43f164af14eaed5845062205470c9292971e18fc8190bacdeafeee04091
+    min_sdk: 23
+    version: 1.0.0.0
+    version_code: 1
+    locales:
+      - en-US
+solana_mobile_dapp_publisher_portal:
+  google_store_package: ''
+  testing_instructions: Open the app and explore the SOL accumulation calculator. Try different growth models (CAGR, Power Law, S-Curve, Rainbow) to see projected values. Connect a Solana wallet to see current holdings. Use the share feature to generate projection images.
+lastSubmittedVersionOnChain:
+  address: GMVBPQBsHow1dSPHoFuDZdFD8U5c3g7LaiMUTGzVFQ3U
+  version_code: 1
+  apk_hash: v2yKFzSK25G4QdvvLqaxKb9ImxnU+RCdqTzTNQyI5tY=
+lastUpdatedVersionOnStore:
+  address: GMVBPQBsHow1dSPHoFuDZdFD8U5c3g7LaiMUTGzVFQ3U

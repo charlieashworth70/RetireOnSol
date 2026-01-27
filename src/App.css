@@ -50,32 +50,53 @@ body {
 
 /* Header */
 .header {
-  text-align: center;
-  padding: 1.5rem 0;
+  padding: 1rem 0 1.25rem;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 1.5rem;
+  background: linear-gradient(180deg, rgba(153, 69, 255, 0.08) 0%, transparent 100%);
 }
 
 .header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(153, 69, 255, 0.3);
+}
+
+.header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
   background: linear-gradient(135deg, var(--sol-purple), var(--sol-green));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
 }
 
 /* Wallet Button */
@@ -778,22 +799,112 @@ body {
 }
 
 /* Footer */
+/* Footer */
 .footer {
   text-align: center;
-  padding: 2rem 0 1rem;
+  padding: 2rem 1rem;
   margin-top: 2rem;
   border-top: 1px solid var(--border-color);
+  background: linear-gradient(180deg, transparent 0%, rgba(153, 69, 255, 0.05) 100%);
 }
 
-.footer p {
-  margin: 0.25rem 0;
+.footer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.footer-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  opacity: 0.8;
+}
+
+.footer-name {
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--sol-purple), var(--sol-green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.footer-link {
   font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.footer-link:hover {
+  color: var(--sol-green);
+}
+
+.footer-divider {
+  color: var(--border-color);
+  font-size: 0.8rem;
+}
+
+.reset-link {
   color: var(--text-secondary);
 }
 
-.disclaimer {
-  font-size: 0.7rem !important;
-  opacity: 0.6;
+.reset-link:hover {
+  color: #ff6b6b;
+}
+
+.footer-disclaimer {
+  background: var(--bg-card);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0 auto 1rem;
+  max-width: 500px;
+  border: 1px solid var(--border-color);
+}
+
+.footer-disclaimer p {
+  margin: 0.25rem 0;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.footer-disclaimer p:first-child {
+  font-weight: 600;
+  color: #ffaa00;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-copyright {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.footer-version {
+  margin: 0.5rem 0 0;
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  opacity: 0.3;
+  font-family: monospace;
 }
 
 /* Responsive adjustments */
@@ -802,8 +913,17 @@ body {
     padding: 2rem;
   }
 
+  .header-logo {
+    width: 56px;
+    height: 56px;
+  }
+
   .header h1 {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
   }
 
   .input-section,
@@ -1709,22 +1829,6 @@ button {
 }
 
 /* Reset button in footer */
-.reset-btn {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.reset-btn:hover {
-  border-color: #FF6B6B;
-  color: #FF6B6B;
-}
 
 /* ============================================
    Current Value Display

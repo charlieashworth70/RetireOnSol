@@ -276,10 +276,15 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="header-top">
-          <h1>RetireOnSol</h1>
+          <div className="header-brand">
+            <img src="/icons/icon.svg" alt="RetireOnSol" className="header-logo" />
+            <div className="header-title-group">
+              <h1>RetireOnSol</h1>
+              <p className="subtitle">Plan your SOL accumulation journey</p>
+            </div>
+          </div>
           <WalletButton onBalanceLoaded={handleWalletBalance} />
         </div>
-        <p className="subtitle">Plan your SOL accumulation journey</p>
       </header>
 
       {/* Tab Navigation */}
@@ -1030,17 +1035,30 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>RetireOnSol - Plan your SOL accumulation journey</p>
-        <p className="disclaimer">
-          Not financial advice. Projections are hypothetical and do not guarantee future results.
-        </p>
-        <button
-          type="button"
-          className="reset-btn"
-          onClick={resetSettings}
-        >
-          Reset All Settings
-        </button>
+        <div className="footer-brand">
+          <img src="/icons/icon.svg" alt="RetireOnSol" className="footer-logo" />
+          <span className="footer-name">RetireOnSol</span>
+        </div>
+        <div className="footer-links">
+          <a href="https://solana.com" target="_blank" rel="noopener noreferrer" className="footer-link">
+            Powered by Solana
+          </a>
+          <span className="footer-divider">|</span>
+          <button
+            type="button"
+            className="footer-link reset-link"
+            onClick={resetSettings}
+          >
+            Reset Settings
+          </button>
+        </div>
+        <div className="footer-disclaimer">
+          <p>For educational and entertainment purposes only.</p>
+          <p>Not financial advice. Projections are hypothetical and do not guarantee future results.</p>
+          <p>Past performance does not indicate future returns. Always do your own research.</p>
+        </div>
+        <p className="footer-copyright">&copy; {new Date().getFullYear()} RetireOnSol. All rights reserved.</p>
+        <p className="footer-version">v2.0.1</p>
       </footer>
     </div>
   );

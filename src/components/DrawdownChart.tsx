@@ -75,7 +75,9 @@ export function DrawdownChart({ result, retirementYears, monthlyIncome }: Drawdo
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const monthNum = label as number;
+      // label is year (decimal), convert back to months for formatMonth
+      const yearValue = label as number;
+      const monthNum = Math.round(yearValue * 12);
       return (
         <div className="chart-tooltip">
           <p className="tooltip-year">{formatMonth(monthNum)}</p>

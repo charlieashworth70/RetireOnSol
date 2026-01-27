@@ -1,8 +1,8 @@
 {
   "schema_version": "0.1.0",
   "name": "RetireOnSol",
-  "short_description": "SOL accumulation & DCA calculator",
-  "long_description": "Plan your SOL accumulation journey with RetireOnSol. Calculate future portfolio values using multiple growth models (CAGR, Power Law, S-Curve, Rainbow), visualize your DCA strategy, and connect your wallet to see your current holdings. Features live SOL price updates, shareable projection images, and comparison charts across all models.",
+  "short_description": "SOL accumulation & retirement planning with Monte Carlo simulations",
+  "long_description": "Plan your SOL accumulation and retirement journey with RetireOnSol. Features two modes: GROW to project your portfolio value using Monte Carlo simulations with CAGR and Power Law models, and SPEND to plan your retirement drawdown with success probability analysis. Connect your wallet to see current holdings, use live SOL price updates, and visualize 500+ simulation paths. Includes inflation-adjusted returns, DCA strategy planning, and shareable projection images.",
   "website": "https://retireonsol.uk",
   "app_url": "https://retireonsol.uk",
   "solana_mobile_dapp_publisher_portal": {
@@ -14,17 +14,18 @@
       "default": "https://retireonsol.uk/icons/icon-512.png"
     },
     "hero_urls": {
-      "default": "https://retireonsol.uk/images/hero.png"
+      "default": "https://retireonsol.uk/images/banner.png"
     },
     "screenshot_urls": [
-      "https://retireonsol.uk/images/screenshot-1.png",
-      "https://retireonsol.uk/images/screenshot-2.png",
-      "https://retireonsol.uk/images/screenshot-3.png"
+      "https://retireonsol.uk/images/promo-1-grow.png",
+      "https://retireonsol.uk/images/promo-2-results.png",
+      "https://retireonsol.uk/images/promo-3-spend.png",
+      "https://retireonsol.uk/images/promo-4-drawdown.png"
     ]
   },
   "release": {
     "address": "",
-    "version": "1.0.0"
+    "version": "2.0.3"
   },
   "platforms": {
     "web": true,

@@ -321,8 +321,8 @@ function App() {
                   type="number"
                   min="0"
                   step="1"
-                  value={currentSOL}
-                  onChange={(e) => setCurrentSOL(Number(e.target.value))}
+                  value={currentSOL || ''}
+                  onChange={(e) => setCurrentSOL(e.target.value === '' ? 0 : Number(e.target.value))}
                 />
                 {walletBalance !== null && (
                   <button
@@ -1058,7 +1058,7 @@ function App() {
           <p>Past performance does not indicate future returns. Always do your own research.</p>
         </div>
         <p className="footer-copyright">&copy; {new Date().getFullYear()} RetireOnSol. All rights reserved.</p>
-        <p className="footer-version">v2.0.2</p>
+        <p className="footer-version">v2.0.3</p>
       </footer>
     </div>
   );

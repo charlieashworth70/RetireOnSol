@@ -183,9 +183,6 @@ export function SpendTab({
             {annualWithdrawalRate > 0 && (
               <>
                 Annual withdrawal rate: {(annualWithdrawalRate * 100).toFixed(1)}%
-                {annualWithdrawalRate > 0.04 && (
-                  <span className="warning-text"> (above 4% safe withdrawal rate)</span>
-                )}
               </>
             )}
           </span>

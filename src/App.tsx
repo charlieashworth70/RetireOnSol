@@ -1040,9 +1040,9 @@ function App() {
           <span className="footer-name">RetireOnSol</span>
         </div>
         <div className="footer-links">
-          <a href="https://solana.com" target="_blank" rel="noopener noreferrer" className="footer-link">
-            Powered by Solana
-          </a>
+          <a href="/privacy" className="footer-link">Privacy Policy</a>
+          <span className="footer-divider">|</span>
+          <a href="/terms" className="footer-link">Terms of Service</a>
           <span className="footer-divider">|</span>
           <button
             type="button"
@@ -1058,7 +1058,7 @@ function App() {
           <p>Past performance does not indicate future returns. Always do your own research.</p>
         </div>
         <p className="footer-copyright">&copy; {new Date().getFullYear()} RetireOnSol. All rights reserved.</p>
-        <p className="footer-version">v2.0.1</p>
+        <p className="footer-version">v2.0.2</p>
       </footer>
     </div>
   );

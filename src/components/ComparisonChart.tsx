@@ -10,6 +10,7 @@ import {
   ComposedChart,
 } from 'recharts';
 import { calculateProjection, formatUSD, type ProjectionInput } from '../utils/calculations';
+import { runMonteCarloSimulation, type MonteCarloParams } from '../utils/monteCarlo';
 import type { GrowthModel, GrowthModelParams } from '../utils/growthModels';
 
 interface ComparisonChartProps {
@@ -19,6 +20,9 @@ interface ComparisonChartProps {
   dcaAmountUSD: number;
   dcaFrequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
   modelParams: GrowthModelParams;
+  inflationAdjustment?: (value: number, year: number) => number;
+  showRealValue?: boolean;
+  mcParams?: MonteCarloParams | null;
 }
 
 interface ComparisonDataPoint {
@@ -26,7 +30,6 @@ interface ComparisonDataPoint {
   cagr: number;
   powerlaw: number;
   scurve: number;
-  rainbow: number;
   invested: number;
 }
 
@@ -34,14 +37,12 @@ const MODEL_COLORS: Record<GrowthModel, string> = {
   cagr: '#FF6B6B',
   powerlaw: '#9945FF',
   scurve: '#00C2FF',
-  rainbow: '#FFD93D',
 };
 
 const MODEL_NAMES: Record<GrowthModel, string> = {
   cagr: 'CAGR (25%)',
   powerlaw: 'Power Law',
-  scurve: 'S-Curve',
-  rainbow: 'Rainbow (Hold)',
+  scurve: 'Asymptotic',
 };
 
 export function ComparisonChart({
@@ -51,32 +52,52 @@ export function ComparisonChart({
   dcaAmountUSD,
   dcaFrequency,
   modelParams,
+  inflationAdjustment,
+  showRealValue,
+  mcParams,
 }: ComparisonChartProps) {
   const [useLogScale, setUseLogScale] = useState(false);
 
-  // Calculate projections for all models
+  const mcEnabled = mcParams?.enabled ?? false;
+
+  // Calculate projections for all models (deterministic or MC median)
   const chartData = useMemo<ComparisonDataPoint[]>(() => {
-    const models: GrowthModel[] = ['cagr', 'powerlaw', 'scurve', 'rainbow'];
+    const models: GrowthModel[] = ['cagr', 'powerlaw', 'scurve'];
     const projections: Record<GrowthModel, number[]> = {
       cagr: [],
       powerlaw: [],
       scurve: [],
-      rainbow: [],
     };
 
     // Calculate each model's projections
     for (const model of models) {
-      const input: ProjectionInput = {
-        currentSOL,
-        currentPrice,
-        years,
-        dcaAmountUSD,
-        dcaFrequency,
-        growthModel: model,
-        modelParams,
-      };
-      const result = calculateProjection(input);
-      projections[model] = result.projections.map((p) => p.portfolioValueUSD);
+      if (mcEnabled && mcParams) {
+        // Run Monte Carlo and use median (p50)
+        const mcResult = runMonteCarloSimulation(
+          currentSOL,
+          currentPrice,
+          years,
+          dcaAmountUSD,
+          dcaFrequency,
+          model,
+          modelParams,
+          mcParams
+        );
+        projections[model] = mcResult.percentiles.map((p) => p.p50);
+      } else {
+        // Deterministic projection
+        const input: ProjectionInput = {
+          currentSOL,
+          currentPrice,
+          years,
+          dcaAmountUSD,
+          dcaFrequency,
+          growthModel: model,
+          modelParams,
+        };
+        const result = calculateProjection(input);
+        projections[model] = result.projections.map((p) => p.portfolioValueUSD);
+      }
     }
 
     // Also get invested amounts (same for all models)
@@ -92,16 +113,18 @@ export function ComparisonChart({
     const baseResult = calculateProjection(baseInput);
     const invested = baseResult.projections.map((p) => p.totalInvestedUSD);
 
-    // Combine into chart data
+    // Combine into chart data, applying inflation adjustment if provided
+    const adjustValue = (value: number, year: number) =>
+      inflationAdjustment && showRealValue ? inflationAdjustment(value, year) : value;
+
     return Array.from({ length: years }, (_, i) => ({
       year: i + 1,
-      cagr: projections.cagr[i],
-      powerlaw: projections.powerlaw[i],
-      scurve: projections.scurve[i],
-      rainbow: projections.rainbow[i],
+      cagr: adjustValue(projections.cagr[i], i + 1),
+      powerlaw: adjustValue(projections.powerlaw[i], i + 1),
+      scurve: adjustValue(projections.scurve[i], i + 1),
       invested: invested[i],
     }));
-  }, [currentSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, modelParams]);
+  }, [currentSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, modelParams, inflationAdjustment, showRealValue, mcEnabled, mcParams]);
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -130,8 +153,8 @@ export function ComparisonChart({
         >
           {useLogScale ? 'Log Scale' : 'Linear Scale'}
         </button>
-        <span className="scale-hint comparison-hint">
-          Comparing all 4 growth models
+        <span className={`scale-hint comparison-hint ${mcEnabled ? 'mc-hint' : ''}`}>
+          {mcEnabled ? 'Comparing median outcomes (Monte Carlo)' : 'Comparing all 3 growth models'}
         </span>
       </div>
       <ResponsiveContainer width="100%" height={400}>
@@ -155,7 +178,7 @@ export function ComparisonChart({
             stroke={MODEL_COLORS.cagr}
             strokeWidth={2}
             dot={false}
-            name={MODEL_NAMES.cagr}
+            name={mcEnabled ? 'CAGR (median)' : MODEL_NAMES.cagr}
           />
           <Line
             type="monotone"
@@ -163,7 +186,7 @@ export function ComparisonChart({
             stroke={MODEL_COLORS.powerlaw}
             strokeWidth={2}
             dot={false}
-            name={MODEL_NAMES.powerlaw}
+            name={mcEnabled ? 'Power Law (median)' : MODEL_NAMES.powerlaw}
           />
           <Line
             type="monotone"
@@ -171,15 +194,7 @@ export function ComparisonChart({
             stroke={MODEL_COLORS.scurve}
             strokeWidth={2}
             dot={false}
-            name={MODEL_NAMES.scurve}
-          />
-          <Line
-            type="monotone"
-            dataKey="rainbow"
-            stroke={MODEL_COLORS.rainbow}
-            strokeWidth={2}
-            dot={false}
-            name={MODEL_NAMES.rainbow}
+            name={mcEnabled ? 'Asymptotic (median)' : MODEL_NAMES.scurve}
           />
 
           {/* Total invested line */}

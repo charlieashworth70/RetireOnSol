@@ -8,27 +8,45 @@
  * 4. Rainbow - Logarithmic regression with bands (cycle-aware)
  */
 
-export type GrowthModel = 'cagr' | 'powerlaw' | 'scurve' | 'rainbow';
+export type GrowthModel = 'cagr' | 'powerlaw' | 'scurve';
+
+export type CAGRDecayType = 'none' | 'auto';
 
 export interface GrowthModelParams {
   // CAGR
   cagr?: number; // Annual growth rate as decimal (0.25 = 25%)
+  cagrDecay?: CAGRDecayType; // How CAGR decays over time (none = constant, auto = realistic decay)
 
-  // Power Law
-  // Bitcoin formula: log10(price) = -17.01 + 5.82 * log10(days_since_genesis)
-  // SOL adapted with different coefficients
-  powerLawSlope?: number; // Slope of log-log relationship (default ~4.5 for SOL)
+  // Power Law (SOL-specific absolute model)
+  // Formula: log10(price) = -2.7 + slope * log10(days_since_genesis)
+  powerLawSlope?: number; // Slope of log-log relationship (default 1.6 for SOL)
 
-  // S-Curve (Logistic)
-  sCurveYearsToMidpoint?: number; // Years until we reach 50% of max price
+  // S-Curve
+  sCurveYearsToHalfRemaining?: number; // Years until we capture 50% of remaining upside
   sCurveMaxPrice?: number; // Theoretical maximum price at full adoption (the ceiling)
 
-  // Rainbow
-  rainbowBand?: 'fire_sale' | 'buy' | 'accumulate' | 'hold' | 'bubble' | 'fomo'; // Which band to project
 }
 
 // SOL genesis was March 16, 2020
 const SOL_GENESIS_DATE = new Date('2020-03-16');
+
+/**
+ * SOL Power Law Coefficients (derived from historical regression)
+ *
+ * Formula: log₁₀(price) = intercept + slope × log₁₀(days_since_genesis)
+ *
+ * Based on key data points:
+ * - May 2020 (day ~60): $0.50 (ATL)
+ * - Dec 2020 (day ~290): $1.50
+ * - Nov 2021 (day ~600): $250 (cycle peak)
+ * - Dec 2022 (day ~1000): $9.50 (cycle bottom)
+ * - Jan 2025 (day ~1750): $295 (new ATH)
+ *
+ * Default slope of 1.6 balances the volatile history.
+ * Intercept of -2.7 calibrates to observed price levels.
+ */
+const SOL_POWER_LAW_INTERCEPT = -2.7;
+const SOL_POWER_LAW_SLOPE_DEFAULT = 1.6;
 
 /**
  * Get days since SOL genesis
@@ -37,62 +55,158 @@ function daysSinceGenesis(date: Date = new Date()): number {
   return Math.floor((date.getTime() - SOL_GENESIS_DATE.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+// CAGR floor - minimum growth rate (hardcoded, future settings page)
+const CAGR_FLOOR = 0.03; // 3%
+
 /**
- * CAGR Model - Simple compound growth
+ * Auto-decay rate schedule (5-year blocks)
+ *
+ * The decay rate itself decays over time, modeling how assets mature:
+ * - Early years: Higher decay as asset is volatile
+ * - Middle years: Maturing, decay rate slows
+ * - Later years: Established asset, minimal decay
+ *
+ * Calibrated to produce reasonable long-term projections:
+ * - Starting 25% CAGR decays to ~18% by year 5
+ * - By year 10: ~14% CAGR
+ * - By year 25: ~9% CAGR (still above 3% floor)
+ *
+ * This produces final values comparable to power law projections.
  */
-function cagrPrice(currentPrice: number, yearsFromNow: number, cagr: number): number {
-  return currentPrice * Math.pow(1 + cagr, yearsFromNow);
+const AUTO_DECAY_SCHEDULE = [
+  { startYear: 1, decayRate: 0.06 },   // Years 1-5: 6%/yr decay (young asset)
+  { startYear: 6, decayRate: 0.05 },   // Years 6-10: 5%/yr decay (maturing)
+  { startYear: 11, decayRate: 0.03 },  // Years 11-15: 3%/yr decay
+  { startYear: 16, decayRate: 0.02 },  // Years 16-20: 2%/yr decay
+  { startYear: 21, decayRate: 0.015 }, // Years 21-25: 1.5%/yr decay (established)
+  { startYear: 26, decayRate: 0.01 },  // Years 26+: 1%/yr decay (mature)
+];
+
+/**
+ * Get the decay rate for a specific year based on the auto-decay schedule
+ */
+function getAutoDecayRate(year: number): number {
+  for (let i = AUTO_DECAY_SCHEDULE.length - 1; i >= 0; i--) {
+    if (year >= AUTO_DECAY_SCHEDULE[i].startYear) {
+      return AUTO_DECAY_SCHEDULE[i].decayRate;
+    }
+  }
+  return AUTO_DECAY_SCHEDULE[0].decayRate;
 }
 
 /**
- * Power Law Model
- * Based on the observation that Bitcoin (and other cryptos) follow a power law:
- * log(price) = a + b * log(days)
+ * CAGR Model - Compound growth with optional auto-decay
  *
- * We anchor to the current price and project forward using the power law slope.
- * The slope determines how fast prices grow relative to time on a log-log scale.
+ * Decay types:
+ * - none: Constant CAGR forever (unrealistic but simple)
+ * - auto: Realistic decay that adapts to time horizon
+ *         Uses 5-year blocks with progressively slower decay
+ *         Models asset maturation over full investment lifecycle
+ *
+ * All decay respects CAGR_FLOOR (3%)
+ */
+function cagrPrice(
+  currentPrice: number,
+  yearsFromNow: number,
+  cagr: number,
+  decayType: CAGRDecayType = 'none'
+): number {
+  if (decayType === 'none') {
+    return currentPrice * Math.pow(1 + cagr, yearsFromNow);
+  }
+
+  // Auto decay: apply year-specific decay rates
+  let price = currentPrice;
+  let currentCAGR = cagr;
+
+  for (let year = 1; year <= yearsFromNow; year++) {
+    // Apply this year's growth
+    price *= (1 + currentCAGR);
+
+    // Get decay rate for this year's block
+    const decayRate = getAutoDecayRate(year);
+
+    // Exponential decay within the block
+    currentCAGR = Math.max(CAGR_FLOOR, currentCAGR * (1 - decayRate));
+  }
+
+  return price;
+}
+
+/**
+ * Power Law Model (SOL-specific, normalized to current price)
+ *
+ * Derives growth rates from the power law formula, then applies them
+ * to the current market price. This preserves the decelerating growth
+ * characteristic of power law while starting from your actual portfolio value.
  *
  * Key insight: power law growth decelerates over time (unlike constant CAGR).
- * A slope of 1.5-2.0 gives reasonable projections anchored to current price.
- */
-function powerLawPrice(currentPrice: number, yearsFromNow: number, slope: number = 1.8): number {
-  const currentDays = daysSinceGenesis();
-  const futureDays = currentDays + (yearsFromNow * 365);
-
-  // Power law ratio: future_price / current_price = (future_days / current_days)^slope
-  // This anchors the projection to the actual current price
-  const ratio = Math.pow(futureDays / currentDays, slope);
-
-  return currentPrice * ratio;
-}
-
-/**
- * Get power law fair value for a given date (relative to current)
- */
-export function getPowerLawFairValue(currentPrice: number, daysFromGenesis: number, slope: number = 1.8): number {
-  const currentDays = daysSinceGenesis();
-  const ratio = Math.pow(daysFromGenesis / currentDays, slope);
-  return currentPrice * ratio;
-}
-
-/**
- * S-Curve (Logistic) Model
- * Models technology adoption - slow start, rapid growth, then saturation
+ * The slope determines how fast prices grow on a log-log scale.
  *
- * The S-curve approaches maxPrice as an asymptote.
+ * @param currentPrice - Current SOL price (used as starting point)
+ * @param yearsFromNow - Years to project forward
+ * @param slope - Power law slope (default 1.6 for SOL)
+ */
+function powerLawPrice(currentPrice: number, yearsFromNow: number, slope: number = SOL_POWER_LAW_SLOPE_DEFAULT): number {
+  const todayDays = daysSinceGenesis();
+  const futureDays = todayDays + (yearsFromNow * 365);
+
+  // Calculate power law fair values for today and future
+  const todayFairValue = Math.pow(10, SOL_POWER_LAW_INTERCEPT + slope * Math.log10(todayDays));
+  const futureFairValue = Math.pow(10, SOL_POWER_LAW_INTERCEPT + slope * Math.log10(futureDays));
+
+  // Derive the growth multiplier from the power law
+  const growthMultiplier = futureFairValue / todayFairValue;
+
+  // Apply to current price (normalized approach)
+  return currentPrice * growthMultiplier;
+}
+
+/**
+ * Get power law fair value for a specific day count
+ */
+export function getPowerLawFairValue(daysFromGenesis: number, slope: number = SOL_POWER_LAW_SLOPE_DEFAULT): number {
+  const logPrice = SOL_POWER_LAW_INTERCEPT + slope * Math.log10(daysFromGenesis);
+  return Math.pow(10, logPrice);
+}
+
+/**
+ * Get current power law fair value (today)
+ */
+export function getCurrentPowerLawFairValue(slope: number = SOL_POWER_LAW_SLOPE_DEFAULT): number {
+  return getPowerLawFairValue(daysSinceGenesis(), slope);
+}
+
+/**
+ * Get power law fair value at a future year
+ * Useful for deriving asymptotic ceiling based on time horizon
+ */
+export function getFuturePowerLawFairValue(yearsFromNow: number, slope: number = SOL_POWER_LAW_SLOPE_DEFAULT): number {
+  const futureDays = daysSinceGenesis() + (yearsFromNow * 365);
+  return getPowerLawFairValue(futureDays, slope);
+}
+
+/**
+ * S-Curve Model
+ * Models technology adoption as exponential decay of remaining growth potential.
+ *
  * - At year 0, price = currentPrice
- * - At year = yearsToMidpoint, price reaches 50% of maxPrice
+ * - At year = yearsToHalfRemaining, price has captured 50% of remaining upside
  * - Curve approaches maxPrice asymptotically
+ *
+ * This formulation works correctly regardless of where currentPrice sits
+ * relative to maxPrice (unlike the classic logistic which breaks when
+ * currentPrice > maxPrice/2).
  *
  * @param currentPrice - Current SOL price
  * @param yearsFromNow - Years to project
- * @param yearsToMidpoint - Years until we reach 50% of max price
+ * @param yearsToHalfRemaining - Years until we capture 50% of remaining upside
  * @param maxPrice - Theoretical maximum price at full adoption (the ceiling)
  */
 function sCurvePrice(
   currentPrice: number,
   yearsFromNow: number,
-  yearsToMidpoint: number = 10,
+  yearsToHalfRemaining: number = 10,
   maxPrice: number = 50000
 ): number {
   // If current price is already at or above max, just return max
@@ -100,52 +214,21 @@ function sCurvePrice(
     return maxPrice;
   }
 
-  // Standard logistic: f(t) = maxPrice / (1 + e^(-k*(t - t_mid)))
-  // At t=0: currentPrice = maxPrice / (1 + e^(k * t_mid))
-  // Solving for k: k = ln((maxPrice / currentPrice) - 1) / t_mid
-  const k = Math.log((maxPrice / currentPrice) - 1) / yearsToMidpoint;
+  const remainingGrowth = maxPrice - currentPrice;
 
-  // Calculate future price
-  const futurePrice = maxPrice / (1 + Math.exp(-k * (yearsFromNow - yearsToMidpoint)));
+  // Exponential decay of remaining growth potential
+  // At t=0: price = currentPrice
+  // At t=yearsToHalfRemaining: price = currentPrice + 0.5 * remainingGrowth
+  // As t→∞: price → maxPrice
+  //
+  // remaining(t) = remainingGrowth * e^(-k*t)
+  // At t=yearsToHalfRemaining: remaining = 0.5 * remainingGrowth
+  // So: 0.5 = e^(-k * yearsToHalfRemaining)
+  // k = ln(2) / yearsToHalfRemaining
+  const k = Math.LN2 / yearsToHalfRemaining;
+  const remainingAtT = remainingGrowth * Math.exp(-k * yearsFromNow);
 
-  return Math.max(currentPrice, futurePrice);
-}
-
-/**
- * Rainbow Chart Model
- * Based on logarithmic regression with standard deviation bands
- * Similar to Bitcoin rainbow chart
- *
- * The bands represent different market conditions:
- * - Fire Sale (>2 std below) - Extremely undervalued
- * - Buy (1-2 std below) - Good buying opportunity
- * - Accumulate (0-1 std below) - Fair value, accumulate
- * - Hold (0-1 std above) - Fair value, hold
- * - Bubble (1-2 std above) - Getting expensive
- * - FOMO (>2 std above) - Extremely overvalued
- */
-type RainbowBand = 'fire_sale' | 'buy' | 'accumulate' | 'hold' | 'bubble' | 'fomo';
-
-const RAINBOW_BAND_MULTIPLIERS: Record<RainbowBand, number> = {
-  fire_sale: 0.3,    // -2.5 std
-  buy: 0.5,          // -1.5 std
-  accumulate: 0.75,  // -0.5 std
-  hold: 1.25,        // +0.5 std
-  bubble: 2.0,       // +1.5 std
-  fomo: 3.5,         // +2.5 std
-};
-
-function rainbowPrice(
-  currentPrice: number,
-  yearsFromNow: number,
-  band: RainbowBand = 'hold',
-  slope: number = 1.8
-): number {
-  // Get power law fair value
-  const fairValue = powerLawPrice(currentPrice, yearsFromNow, slope);
-
-  // Apply band multiplier
-  return fairValue * RAINBOW_BAND_MULTIPLIERS[band];
+  return maxPrice - remainingAtT;
 }
 
 /**
@@ -158,26 +241,24 @@ export function calculateFuturePrice(
   params: GrowthModelParams
 ): number {
   switch (model) {
-    case 'cagr':
-      return cagrPrice(currentPrice, yearsFromNow, params.cagr || 0.25);
+    case 'cagr': {
+      return cagrPrice(
+        currentPrice,
+        yearsFromNow,
+        params.cagr || 0.25,
+        params.cagrDecay || 'none'
+      );
+    }
 
     case 'powerlaw':
-      return powerLawPrice(currentPrice, yearsFromNow, params.powerLawSlope || 1.8);
+      return powerLawPrice(currentPrice, yearsFromNow, params.powerLawSlope || 1.6);
 
     case 'scurve':
       return sCurvePrice(
         currentPrice,
         yearsFromNow,
-        params.sCurveYearsToMidpoint || 10,
+        params.sCurveYearsToHalfRemaining || 10,
         params.sCurveMaxPrice || 50000
-      );
-
-    case 'rainbow':
-      return rainbowPrice(
-        currentPrice,
-        yearsFromNow,
-        params.rainbowBand || 'hold',
-        params.powerLawSlope || 1.8
       );
 
     default:
@@ -213,9 +294,7 @@ export function getModelDescription(model: GrowthModel): string {
     case 'powerlaw':
       return 'Log-linear growth over time - based on Bitcoin\'s historical pattern';
     case 'scurve':
-      return 'Technology adoption curve - slow start, rapid growth, then plateau';
-    case 'rainbow':
-      return 'Logarithmic regression bands - accounts for market cycles';
+      return 'Approaches max price asymptotically - fast early gains that slow over time';
     default:
       return '';
   }
@@ -231,9 +310,7 @@ export function getModelDisplayName(model: GrowthModel): string {
     case 'powerlaw':
       return 'Power Law';
     case 'scurve':
-      return 'S-Curve';
-    case 'rainbow':
-      return 'Rainbow';
+      return 'Asymptotic';
     default:
       return model;
   }

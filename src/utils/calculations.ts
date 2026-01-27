@@ -109,6 +109,27 @@ export function calculateProjection(input: ProjectionInput): ProjectionResult {
     });
   }
 
+  // Handle edge case where projections is empty (years < 1)
+  if (projections.length === 0) {
+    const portfolioValueUSD = solBalance * currentPrice;
+    return {
+      projections: [{
+        year: 0,
+        solBalance: Math.round(solBalance * 100) / 100,
+        solPrice: Math.round(currentPrice * 100) / 100,
+        portfolioValueUSD: Math.round(portfolioValueUSD),
+        totalInvestedUSD: Math.round(totalInvestedUSD),
+        gainUSD: 0,
+      }],
+      finalSOL: solBalance,
+      finalPrice: currentPrice,
+      finalValueUSD: portfolioValueUSD,
+      totalInvestedUSD,
+      totalGainUSD: 0,
+      initialValueUSD,
+    };
+  }
+
   const final = projections[projections.length - 1];
 
   return {

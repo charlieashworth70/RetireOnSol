@@ -1,4 +1,4 @@
-const CACHE_NAME = 'retireonsol-v1';
+const CACHE_NAME = 'retireonsol-v2.0.4';
 const urlsToCache = [
   '/',
   '/index.html',

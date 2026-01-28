@@ -16,43 +16,43 @@ app:
     - purpose: icon
       uri: android/assets/icon-512.png
 release:
-  address: GMVBPQBsHow1dSPHoFuDZdFD8U5c3g7LaiMUTGzVFQ3U
+  address: 2wbJeFxLk2mycx5aixwS34XZPb8hnLSDaFYFVaGjhWYT
   media:
     - purpose: icon
       uri: android/assets/icon-512.png
     - purpose: banner
       uri: android/assets/banner.png
     - purpose: screenshot
-      uri: android/assets/screenshot-1.png
+      uri: android/assets/promo-1-grow.png
     - purpose: screenshot
-      uri: android/assets/screenshot-2.png
+      uri: android/assets/promo-2-results.png
     - purpose: screenshot
-      uri: android/assets/screenshot-3.png
+      uri: android/assets/promo-3-spend.png
     - purpose: screenshot
-      uri: android/assets/screenshot-4.png
+      uri: android/assets/promo-4-drawdown.png
   files:
     - purpose: install
-      uri: android/RetireOnSol-v1.0.0-final.apk
+      uri: android/RetireOnSol-v2.0.3.apk
   catalog:
     en-US:
       name: RetireOnSol
-      short_description: SOL DCA calculator
-      long_description: Plan your SOL accumulation journey with RetireOnSol. Calculate future portfolio values using multiple growth models (CAGR, Power Law, S-Curve, Rainbow), visualize your DCA strategy, and connect your wallet to see your current holdings. Features live SOL price updates, shareable projection images, and comparison charts across all models.
-      new_in_version: Initial release with multiple growth models and DCA projections
+      short_description: SOL retirement planner
+      long_description: Plan your SOL accumulation and retirement journey with RetireOnSol. Features two modes - GROW to project your portfolio value using Monte Carlo simulations with CAGR and Power Law models, and SPEND to plan your retirement drawdown with success probability analysis. Connect your wallet to see current holdings, use live SOL price updates, and visualize 500+ simulation paths. Includes inflation-adjusted returns, DCA strategy planning, and shareable projection images.
+      new_in_version: v2.0.4 fixes blank screen issue with improved service worker caching and error handling
       saga_features: ''
   android_details:
     cert_fingerprint: 3bd5b43f164af14eaed5845062205470c9292971e18fc8190bacdeafeee04091
-    min_sdk: 23
-    version: 1.0.0.0
-    version_code: 1
+    min_sdk: 21
+    version: '2'
+    version_code: 2
     locales:
       - en-US
 solana_mobile_dapp_publisher_portal:
   google_store_package: ''
-  testing_instructions: Open the app and explore the SOL accumulation calculator. Try different growth models (CAGR, Power Law, S-Curve, Rainbow) to see projected values. Connect a Solana wallet to see current holdings. Use the share feature to generate projection images.
+  testing_instructions: Open the app and explore both tabs. GROW tab - enter SOL holdings, set DCA amounts, and view Monte Carlo projections. SPEND tab - enter retirement portfolio, set monthly income needs, and see success probability with drawdown analysis. Connect a Solana wallet to import current holdings. Use the share feature to generate projection images.
 lastSubmittedVersionOnChain:
-  address: GMVBPQBsHow1dSPHoFuDZdFD8U5c3g7LaiMUTGzVFQ3U
-  version_code: 1
-  apk_hash: v2yKFzSK25G4QdvvLqaxKb9ImxnU+RCdqTzTNQyI5tY=
+  address: 2wbJeFxLk2mycx5aixwS34XZPb8hnLSDaFYFVaGjhWYT
+  version_code: 2
+  apk_hash: 2NdRCnFIpHUocXLoOqCUDfGffye+OHch5tMzLT96MGA=
 lastUpdatedVersionOnStore:
-  address: GMVBPQBsHow1dSPHoFuDZdFD8U5c3g7LaiMUTGzVFQ3U
+  address: 2wbJeFxLk2mycx5aixwS34XZPb8hnLSDaFYFVaGjhWYT

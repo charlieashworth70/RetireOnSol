@@ -1058,7 +1058,7 @@ function App() {
           <p>Past performance does not indicate future returns. Always do your own research.</p>
         </div>
         <p className="footer-copyright">&copy; {new Date().getFullYear()} RetireOnSol. All rights reserved.</p>
-        <p className="footer-version">v2.0.3</p>
+        <p className="footer-version">v2.0.4</p>
       </footer>
     </div>
   );

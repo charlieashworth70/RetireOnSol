@@ -25,6 +25,9 @@ export interface StoredSettings {
   inflationAmplitude: number;
   inflationCyclePeriod: number;
   debasementRate: number;
+  // JitoSOL
+  jitoSOLEnabled: boolean;
+  jitoSOLAPR: number;
   // Monte Carlo
   mcEnabled: boolean;
   mcVolatility: number;
@@ -53,6 +56,8 @@ export const DEFAULT_SETTINGS: StoredSettings = {
     powerLawSlope: 1.6,
     sCurveYearsToHalfRemaining: 12,
   },
+  jitoSOLEnabled: false,
+  jitoSOLAPR: 0.075,
   inflationEnabled: true,
   inflationType: 'linear',
   inflationRate: 0.035,

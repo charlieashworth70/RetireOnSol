@@ -23,6 +23,8 @@ export interface ProjectionInput {
   dcaFrequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
   growthModel: GrowthModel;
   modelParams: GrowthModelParams;
+  jitoSOLEnabled?: boolean;
+  jitoSOLAPR?: number; // e.g. 0.075 for 7.5%
 }
 
 export interface YearlyProjection {
@@ -68,6 +70,8 @@ export function calculateProjection(input: ProjectionInput): ProjectionResult {
     dcaFrequency,
     growthModel,
     modelParams,
+    jitoSOLEnabled = false,
+    jitoSOLAPR = 0.075,
   } = input;
 
   const contributionsPerYear = getContributionsPerYear(dcaFrequency);
@@ -94,6 +98,12 @@ export function calculateProjection(input: ProjectionInput): ProjectionResult {
 
     // Update balances
     solBalance += solPurchased;
+
+    // JitoSOL staking yield: compound SOL balance with APR
+    if (jitoSOLEnabled && jitoSOLAPR > 0) {
+      solBalance *= (1 + jitoSOLAPR);
+    }
+
     totalInvestedUSD += annualInvestmentUSD;
 
     const portfolioValueUSD = solBalance * endPrice;

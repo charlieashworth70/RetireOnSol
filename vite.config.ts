@@ -4,6 +4,6 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // For Cloudflare Pages deployment
-  base: '/',
+  // For GitHub Pages deployment
+  base: '/RetireOnSol/',
 })

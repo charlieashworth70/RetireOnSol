@@ -1902,3 +1902,143 @@ button {
 .slider-group {
   margin-bottom: 1rem;
 }
+
+/* ============================================
+   Tab Phase Labels (Plan > Grow, Plan > Spend)
+   ============================================ */
+.tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.tab-phase {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.tab-btn.active .tab-phase {
+  opacity: 0.8;
+}
+
+.tab-label {
+  font-size: 0.95rem;
+}
+
+/* ============================================
+   JitoSOL Staking Section
+   ============================================ */
+.jitosol-section {
+  border: 1px solid transparent;
+  transition: border-color 0.3s;
+}
+
+.jitosol-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.jitosol-toggle .toggle-text {
+  flex: 1;
+}
+
+.jitosol-toggle .toggle-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.jitosol-toggle .toggle-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.jitosol-params {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ============================================
+   Monitor Tab
+   ============================================ */
+.monitor-section {
+  text-align: center;
+}
+
+.monitor-coming-soon {
+  padding: 1.5rem 0;
+}
+
+.monitor-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.monitor-coming-soon h2 {
+  color: var(--sol-green) !important;
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem !important;
+}
+
+.monitor-tagline {
+  color: var(--sol-purple);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.monitor-features {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto 2rem;
+}
+
+.monitor-feature {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  background: var(--bg-input);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.feature-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.feature-text strong {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.feature-text span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.monitor-note {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}

@@ -173,7 +173,9 @@ function runSingleSimulation(
   model: GrowthModel,
   modelParams: GrowthModelParams,
   volatility: number,
-  volatilityDecay: VolatilityDecayType
+  volatilityDecay: VolatilityDecayType,
+  jitoSOLEnabled: boolean = false,
+  jitoSOLAPR: number = 0.075
 ): { yearlyValues: number[]; yearlySol: number[]; finalValue: number; finalSol: number } {
   // Generate random price path
   const pricePath = generatePricePath(currentPrice, years, model, modelParams, volatility, volatilityDecay);
@@ -202,6 +204,11 @@ function runSingleSimulation(
     // SOL purchased this year
     const solPurchased = avgPrice > 0 ? annualInvestmentUSD / avgPrice : 0;
     solBalance += solPurchased;
+
+    // JitoSOL staking yield
+    if (jitoSOLEnabled && jitoSOLAPR > 0) {
+      solBalance *= (1 + jitoSOLAPR);
+    }
 
     // Portfolio value at end of year
     const portfolioValue = solBalance * endPrice;
@@ -239,7 +246,9 @@ export function runMonteCarloSimulation(
   dcaFrequency: 'daily' | 'weekly' | 'monthly' | 'yearly',
   model: GrowthModel,
   modelParams: GrowthModelParams,
-  mcParams: MonteCarloParams
+  mcParams: MonteCarloParams,
+  jitoSOLEnabled: boolean = false,
+  jitoSOLAPR: number = 0.075
 ): MonteCarloResult {
   const { volatility, volatilityDecay, simulations } = mcParams;
 
@@ -259,7 +268,9 @@ export function runMonteCarloSimulation(
       model,
       modelParams,
       volatility,
-      volatilityDecay
+      volatilityDecay,
+      jitoSOLEnabled,
+      jitoSOLAPR
     );
     allYearlyValues.push(result.yearlyValues);
     allYearlySol.push(result.yearlySol);

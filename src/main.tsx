@@ -71,7 +71,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+    const base = import.meta.env.BASE_URL || '/';
+    navigator.serviceWorker.register(`${base}sw.js`).catch((err) => {
       console.log('ServiceWorker registration failed:', err);
     });
   });
@@ -94,8 +95,11 @@ function Router() {
     };
   }, []);
 
-  // Route matching
-  switch (route) {
+  // Route matching - support both root and base path
+  const base = import.meta.env.BASE_URL || '/';
+  const normalizedRoute = route.startsWith(base) ? route.slice(base.length - 1) : route;
+  
+  switch (normalizedRoute) {
     case '/privacy':
     case '/privacy-policy':
       return <PrivacyPolicy />;

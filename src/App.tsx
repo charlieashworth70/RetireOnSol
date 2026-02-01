@@ -21,7 +21,7 @@ import { shareProjection } from './utils/shareImage';
 import './App.css';
 
 type DCAFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
-type AppTab = 'grow' | 'spend';
+type AppTab = 'grow' | 'spend' | 'monitor';
 
 // Load initial settings from localStorage
 const initialSettings = loadSettings();
@@ -85,6 +85,10 @@ function App() {
   const [mcSimulations, setMcSimulations] = useState(initialSettings.mcSimulations ?? DEFAULT_SETTINGS.mcSimulations);
   const [mcCalculating, setMcCalculating] = useState(false);
 
+  // JitoSOL staking state
+  const [jitoSOLEnabled, setJitoSOLEnabled] = useState(initialSettings.jitoSOLEnabled ?? false);
+  const [jitoSOLAPR, setJitoSOLAPR] = useState(initialSettings.jitoSOLAPR ?? 0.075);
+
   // Reset key - incremented when Reset All Settings is clicked to trigger SpendTab reset
   const [resetKey, setResetKey] = useState(0);
 
@@ -134,12 +138,15 @@ function App() {
       mcVolatility,
       mcVolatilityDecay,
       mcSimulations,
+      jitoSOLEnabled,
+      jitoSOLAPR,
     });
   }, [
     currentSOL, years, dcaAmountUSD, dcaMaxLimit, dcaFrequency,
     growthModel, modelParams,
     inflationEnabled, inflationType, inflationRate, inflationAmplitude, inflationCyclePeriod, debasementRate,
     mcEnabled, mcVolatility, mcVolatilityDecay, mcSimulations,
+    jitoSOLEnabled, jitoSOLAPR,
   ]);
 
   // Reset all settings to defaults
@@ -168,6 +175,8 @@ function App() {
       setMcVolatility(DEFAULT_SETTINGS.mcVolatility);
       setMcVolatilityDecay(DEFAULT_SETTINGS.mcVolatilityDecay);
       setMcSimulations(DEFAULT_SETTINGS.mcSimulations);
+      setJitoSOLEnabled(false);
+      setJitoSOLAPR(0.075);
       // Trigger SpendTab reset
       setResetKey(k => k + 1);
     }
@@ -206,9 +215,11 @@ function App() {
       dcaFrequency,
       growthModel,
       modelParams: effectiveModelParams,
+      jitoSOLEnabled,
+      jitoSOLAPR,
     };
     return calculateProjection(input);
-  }, [currentSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, growthModel, effectiveModelParams]);
+  }, [currentSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, growthModel, effectiveModelParams, jitoSOLEnabled, jitoSOLAPR]);
 
   // Inflation params for today's dollars calculation
   const inflationParams: InflationParams = useMemo(() => ({
@@ -263,14 +274,16 @@ function App() {
         dcaFrequency,
         growthModel,
         effectiveModelParams,
-        mcParams
+        mcParams,
+        jitoSOLEnabled,
+        jitoSOLAPR
       );
       setMcResult(result);
       setMcCalculating(false);
     }, 50);
 
     return () => clearTimeout(timeoutId);
-  }, [mcEnabled, currentSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, growthModel, effectiveModelParams, mcParams]);
+  }, [mcEnabled, currentSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, growthModel, effectiveModelParams, mcParams, jitoSOLEnabled, jitoSOLAPR]);
 
   return (
     <div className="app">
@@ -294,14 +307,23 @@ function App() {
           className={`tab-btn ${activeTab === 'grow' ? 'active' : ''}`}
           onClick={() => setActiveTab('grow')}
         >
-          Grow
+          <span className="tab-phase">Plan</span>
+          <span className="tab-label">Grow</span>
         </button>
         <button
           type="button"
           className={`tab-btn ${activeTab === 'spend' ? 'active' : ''}`}
           onClick={() => setActiveTab('spend')}
         >
-          Spend
+          <span className="tab-phase">Plan</span>
+          <span className="tab-label">Spend</span>
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'monitor' ? 'active' : ''}`}
+          onClick={() => setActiveTab('monitor')}
+        >
+          <span className="tab-label">Monitor</span>
         </button>
       </nav>
 
@@ -377,6 +399,57 @@ function App() {
             </div>
           </div>
         </section>
+
+        {/* JitoSOL Staking Toggle */}
+        {!spendNowMode && (
+          <section className="input-section jitosol-section">
+            <div className="jitosol-toggle">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={jitoSOLEnabled}
+                  onChange={(e) => setJitoSOLEnabled(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+              <div className="toggle-text">
+                <span className="toggle-label">Stake to JitoSOL</span>
+                <span className="toggle-hint">
+                  {jitoSOLEnabled
+                    ? `Earning ~${(jitoSOLAPR * 100).toFixed(1)}% APR compounding on SOL balance`
+                    : 'Earn staking yield on your SOL holdings'}
+                </span>
+              </div>
+            </div>
+
+            {jitoSOLEnabled && (
+              <div className="jitosol-params">
+                <div className="input-group slider-group">
+                  <label htmlFor="jitoSOLAPR">
+                    JitoSOL APR: <span className="slider-value">{(jitoSOLAPR * 100).toFixed(1)}%</span>
+                  </label>
+                  <input
+                    id="jitoSOLAPR"
+                    type="range"
+                    min="3"
+                    max="12"
+                    step="0.5"
+                    value={jitoSOLAPR * 100}
+                    onChange={(e) => setJitoSOLAPR(Number(e.target.value) / 100)}
+                  />
+                  <div className="slider-labels">
+                    <span>3%</span>
+                    <span className="slider-marker" style={{ left: '50%' }}>7.5% current</span>
+                    <span>12%</span>
+                  </div>
+                  <span className="input-hint">
+                    JitoSOL earns MEV-boosted staking rewards. Current APR ~7-8%. Compounds your SOL balance annually.
+                  </span>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         {!spendNowMode && (
           <>
@@ -1032,6 +1105,42 @@ function App() {
             resetKey={resetKey}
           />
         )}
+        {/* MONITOR TAB */}
+        {activeTab === 'monitor' && (
+          <section className="input-section monitor-section">
+            <div className="monitor-coming-soon">
+              <div className="monitor-icon">📡</div>
+              <h2>Monitor</h2>
+              <p className="monitor-tagline">Coming Soon</p>
+              <div className="monitor-features">
+                <div className="monitor-feature">
+                  <span className="feature-icon">📈</span>
+                  <div className="feature-text">
+                    <strong>DCA Reminders</strong>
+                    <span>Get notified when it's time to buy — stay on track with your accumulation plan</span>
+                  </div>
+                </div>
+                <div className="monitor-feature">
+                  <span className="feature-icon">💸</span>
+                  <div className="feature-text">
+                    <strong>Withdrawal Reminders</strong>
+                    <span>Scheduled alerts for your retirement withdrawals — never miss a distribution</span>
+                  </div>
+                </div>
+                <div className="monitor-feature">
+                  <span className="feature-icon">🔔</span>
+                  <div className="feature-text">
+                    <strong>Price Alerts</strong>
+                    <span>Notifications when SOL hits your target prices — buy the dips, celebrate the rips</span>
+                  </div>
+                </div>
+              </div>
+              <p className="monitor-note">
+                PWA push notifications • Zero cost • No account needed
+              </p>
+            </div>
+          </section>
+        )}
       </main>
 
       <footer className="footer">
@@ -1040,9 +1149,9 @@ function App() {
           <span className="footer-name">RetireOnSol</span>
         </div>
         <div className="footer-links">
-          <a href="/privacy" className="footer-link">Privacy Policy</a>
+          <a href={`${import.meta.env.BASE_URL}privacy`} className="footer-link">Privacy Policy</a>
           <span className="footer-divider">|</span>
-          <a href="/terms" className="footer-link">Terms of Service</a>
+          <a href={`${import.meta.env.BASE_URL}terms`} className="footer-link">Terms of Service</a>
           <span className="footer-divider">|</span>
           <button
             type="button"
@@ -1058,7 +1167,7 @@ function App() {
           <p>Past performance does not indicate future returns. Always do your own research.</p>
         </div>
         <p className="footer-copyright">&copy; {new Date().getFullYear()} RetireOnSol. All rights reserved.</p>
-        <p className="footer-version">v2.0.4</p>
+        <p className="footer-version">v3.0.0-alpha.1</p>
       </footer>
     </div>
   );

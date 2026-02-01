@@ -1,0 +1,49 @@
+.jupiter-swap-placeholder {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  text-align: center;
+}
+
+.jupiter-swap-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.jupiter-icon {
+  font-size: 1.3rem;
+}
+
+.jupiter-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #e0e0e0;
+}
+
+.jupiter-description {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0 0 0.8rem 0;
+}
+
+.jupiter-swap-btn {
+  background: linear-gradient(135deg, #00d18c, #00a06a);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.jupiter-swap-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 209, 140, 0.3);
+  filter: brightness(1.1);
+}

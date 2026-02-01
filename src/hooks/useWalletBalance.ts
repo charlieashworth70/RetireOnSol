@@ -2,6 +2,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, Connection, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { useState, useEffect, useCallback } from 'react';
+import { useDemoMode } from '../contexts/DemoContext';
 
 const JITOSOL_MINT = new PublicKey('J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn');
 const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
@@ -66,12 +67,14 @@ async function getJitoSolBalance(publicKey: PublicKey): Promise<number> {
 
 export function useWalletBalance(): WalletBalanceResult {
   const { publicKey, connected } = useWallet();
+  const demo = useDemoMode();
   const [balance, setBalance] = useState<number | null>(null);
   const [jitoSolBalance, setJitoSolBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBalance = useCallback(async () => {
+    if (demo.enabled) return;
     if (!publicKey || !connected) {
       setBalance(null);
       setJitoSolBalance(null);
@@ -105,9 +108,10 @@ export function useWalletBalance(): WalletBalanceResult {
     } finally {
       setLoading(false);
     }
-  }, [publicKey, connected]);
+  }, [publicKey, connected, demo.enabled]);
 
   useEffect(() => {
+    if (demo.enabled) return;
     if (connected && publicKey) {
       fetchBalance();
     } else {
@@ -115,7 +119,18 @@ export function useWalletBalance(): WalletBalanceResult {
       setJitoSolBalance(null);
       setError(null);
     }
-  }, [connected, publicKey, fetchBalance]);
+  }, [connected, publicKey, fetchBalance, demo.enabled]);
+
+  // Demo mode: return fake balances
+  if (demo.enabled) {
+    return {
+      balance: demo.solBalance,
+      jitoSolBalance: demo.jitoSolBalance,
+      loading: false,
+      error: null,
+      refetch: async () => {},
+    };
+  }
 
   return { balance, jitoSolBalance, loading, error, refetch: fetchBalance };
 }

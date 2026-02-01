@@ -17,11 +17,15 @@ import { GrowthChart } from './components/GrowthChart';
 import { ComparisonChart } from './components/ComparisonChart';
 import { SpendTab } from './components/SpendTab';
 import { CancelPlanModal } from './components/CancelPlanModal';
+import { MonitorAccum } from './components/MonitorAccum';
+import { MonitorDecum } from './components/MonitorDecum';
 import { useWalletBalance } from './hooks/useWalletBalance';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { shareProjection } from './utils/shareImage';
+import { useDemoMode } from './contexts/DemoContext';
+import { DemoPanel } from './components/DemoPanel';
 import './App.css';
 
 type DCAFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -33,6 +37,8 @@ type MonitorSubTab = 'accum' | 'decum';
 const initialSettings = loadSettings();
 
 function App() {
+  const demo = useDemoMode();
+
   // Tab state - two-level navigation
   const [mainTab, setMainTab] = useState<MainTab>('plan');
   const [planTab, setPlanTab] = useState<PlanSubTab>('grow');
@@ -379,11 +385,32 @@ function App() {
       <header className="header">
         <div className="header-top">
           <div className="header-brand">
-            <img src="/icons/icon.svg" alt="RetireOnSol" className="header-logo" />
+            <img
+              src="/icons/icon.svg"
+              alt="RetireOnSol"
+              className="header-logo"
+              onClick={demo.handleLogoClick}
+              style={{ cursor: 'pointer' }}
+            />
             <div className="header-title-group">
               <h1>RetireOnSol</h1>
               <p className="subtitle">Plan your SOL accumulation journey</p>
             </div>
+            {demo.enabled && (
+              <span style={{
+                background: 'rgba(245, 166, 35, 0.2)',
+                border: '1px solid #F5A623',
+                color: '#F5A623',
+                padding: '2px 8px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                marginLeft: '8px',
+                whiteSpace: 'nowrap',
+              }}>
+                🧪 DEMO
+              </span>
+            )}
           </div>
           {/* Wallet button removed from header — import from wallet is near holdings inputs */}
         </div>
@@ -1329,34 +1356,14 @@ function App() {
                     <div className="monitor-wallet-connect">
                       <WalletMultiButton />
                     </div>
-                    <p className="monitor-description">Connect your wallet to track progress</p>
 
-                    <div className="monitor-coming-soon-features">
-                      <h3>Coming Soon</h3>
-                      <div className="monitor-features">
-                        <div className="monitor-feature">
-                          <span className="feature-icon">📈</span>
-                          <div className="feature-text">
-                            <strong>DCA Reminders</strong>
-                            <span>Get notified when it&apos;s time to buy</span>
-                          </div>
-                        </div>
-                        <div className="monitor-feature">
-                          <span className="feature-icon">📊</span>
-                          <div className="feature-text">
-                            <strong>Progress Tracking</strong>
-                            <span>Track your SOL accumulation vs the plan</span>
-                          </div>
-                        </div>
-                        <div className="monitor-feature">
-                          <span className="feature-icon">🔗</span>
-                          <div className="feature-text">
-                            <strong>Jupiter Swap Integration</strong>
-                            <span>Swap SOL → JitoSOL directly in-app</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <MonitorAccum
+                      activePlan={activePlan}
+                      walletSOL={walletBalance}
+                      walletJitoSOL={walletJitoSolBalance}
+                      currentPrice={currentPrice}
+                      connected={demo.enabled || connected}
+                    />
                   </section>
                 )}
 
@@ -1384,27 +1391,14 @@ function App() {
                     <div className="monitor-wallet-connect">
                       <WalletMultiButton />
                     </div>
-                    <p className="monitor-description">Connect your wallet to track withdrawals</p>
 
-                    <div className="monitor-coming-soon-features">
-                      <h3>Coming Soon</h3>
-                      <div className="monitor-features">
-                        <div className="monitor-feature">
-                          <span className="feature-icon">💸</span>
-                          <div className="feature-text">
-                            <strong>Withdrawal Reminders</strong>
-                            <span>Scheduled alerts for retirement withdrawals</span>
-                          </div>
-                        </div>
-                        <div className="monitor-feature">
-                          <span className="feature-icon">🔔</span>
-                          <div className="feature-text">
-                            <strong>Balance Monitoring</strong>
-                            <span>Track portfolio health during drawdown</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <MonitorDecum
+                      activePlan={activePlan}
+                      walletSOL={walletBalance}
+                      walletJitoSOL={walletJitoSolBalance}
+                      currentPrice={currentPrice}
+                      connected={demo.enabled || connected}
+                    />
                   </section>
                 )}
 
@@ -1458,6 +1452,7 @@ function App() {
         <p className="footer-copyright">&copy; {new Date().getFullYear()} RetireOnSol. All rights reserved.</p>
         <p className="footer-version">v3.0.0-alpha.3</p>
       </footer>
+      <DemoPanel />
     </div>
   );
 }

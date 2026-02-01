@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { WalletContextProvider } from './contexts/WalletContext'
+import { DemoProvider } from './contexts/DemoContext'
 import { PrivacyPolicy } from './pages/PrivacyPolicy'
 import { TermsOfService } from './pages/TermsOfService'
 
@@ -108,9 +109,11 @@ function Router() {
       return <TermsOfService />;
     default:
       return (
-        <WalletContextProvider>
-          <App />
-        </WalletContextProvider>
+        <DemoProvider>
+          <WalletContextProvider>
+            <App />
+          </WalletContextProvider>
+        </DemoProvider>
       );
   }
 }

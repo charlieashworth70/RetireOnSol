@@ -240,26 +240,73 @@ body {
   width: 100%;
 }
 
-.use-wallet-btn {
-  padding: 0.5rem 0.75rem;
-  background: linear-gradient(135deg, var(--sol-purple), var(--sol-green));
-  border: none;
+/* Holdings header with import button */
+.holdings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.holdings-header h2 {
+  margin: 0;
+}
+
+.import-wallet-btn {
+  padding: 0.4rem 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 }
 
-.use-wallet-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(153, 69, 255, 0.3);
+.import-wallet-btn:hover {
+  border-color: var(--sol-purple);
+  color: var(--sol-purple);
+  background: rgba(153, 69, 255, 0.05);
 }
 
-.use-wallet-btn:active {
-  transform: scale(0.98);
+.import-wallet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wallet-imported-notice {
+  padding: 0.4rem 0.75rem;
+  background: rgba(0, 200, 83, 0.1);
+  border: 1px solid rgba(0, 200, 83, 0.2);
+  border-radius: 6px;
+  color: #00c853;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Monitor tab wallet connect */
+.monitor-wallet-connect {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.monitor-description {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem 0;
+  font-style: italic;
 }
 
 /* Live price display */

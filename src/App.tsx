@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   calculateProjection,
   formatUSD,
@@ -15,8 +15,11 @@ import { fetchSOLPrice, startPriceRefresh } from './utils/solPrice';
 import { loadSettings, saveSettings, clearSettings, DEFAULT_SETTINGS } from './utils/storage';
 import { GrowthChart } from './components/GrowthChart';
 import { ComparisonChart } from './components/ComparisonChart';
-import { WalletButton } from './components/WalletButton';
 import { SpendTab } from './components/SpendTab';
+import { useWalletBalance } from './hooks/useWalletBalance';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { shareProjection } from './utils/shareImage';
 import './App.css';
 
@@ -185,29 +188,42 @@ function App() {
     }
   }, []);
 
-  // Track wallet balances for "Use Wallet Balance" buttons
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  const [walletJitoSolBalance, setWalletJitoSolBalance] = useState<number | null>(null);
+  // Wallet integration for "Import from Wallet"
+  const { connected } = useWallet();
+  const { setVisible: setWalletModalVisible } = useWalletModal();
+  const { balance: walletBalance, jitoSolBalance: walletJitoSolBalance, loading: walletLoading } = useWalletBalance();
+  const [walletImported, setWalletImported] = useState(false);
+  const walletImportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track if we're waiting for wallet connection to import
+  const [pendingImport, setPendingImport] = useState(false);
 
-  // Handle wallet balance loaded
-  const handleWalletBalance = useCallback((solBalance: number, jitoSolBalance: number) => {
-    setWalletBalance(solBalance);
-    setWalletJitoSolBalance(jitoSolBalance);
-  }, []);
-
-  // Apply wallet SOL balance to input
-  const useWalletBalanceForInput = useCallback(() => {
-    if (walletBalance !== null) {
+  // When wallet connects and we have a pending import, do the import
+  useEffect(() => {
+    if (pendingImport && connected && !walletLoading && walletBalance !== null) {
       setCurrentSOL(walletBalance);
+      setCurrentJitoSOL(walletJitoSolBalance ?? 0);
+      setPendingImport(false);
+      setWalletImported(true);
+      if (walletImportTimerRef.current) clearTimeout(walletImportTimerRef.current);
+      walletImportTimerRef.current = setTimeout(() => setWalletImported(false), 3000);
     }
-  }, [walletBalance]);
+  }, [pendingImport, connected, walletLoading, walletBalance, walletJitoSolBalance]);
 
-  // Apply wallet JitoSOL balance to input
-  const useWalletJitoSolForInput = useCallback(() => {
-    if (walletJitoSolBalance !== null) {
-      setCurrentJitoSOL(walletJitoSolBalance);
+  // Import from wallet handler
+  const importFromWallet = useCallback(() => {
+    if (connected && walletBalance !== null) {
+      // Already connected — import immediately
+      setCurrentSOL(walletBalance);
+      setCurrentJitoSOL(walletJitoSolBalance ?? 0);
+      setWalletImported(true);
+      if (walletImportTimerRef.current) clearTimeout(walletImportTimerRef.current);
+      walletImportTimerRef.current = setTimeout(() => setWalletImported(false), 3000);
+    } else {
+      // Not connected — open modal and set pending
+      setPendingImport(true);
+      setWalletModalVisible(true);
     }
-  }, [walletJitoSolBalance]);
+  }, [connected, walletBalance, walletJitoSolBalance, setWalletModalVisible]);
 
   // Effective model params with dynamic ceiling for scurve
   const effectiveModelParams = useMemo(() => ({
@@ -311,7 +327,7 @@ function App() {
               <p className="subtitle">Plan your SOL accumulation journey</p>
             </div>
           </div>
-          <WalletButton onBalanceLoaded={handleWalletBalance} />
+          {/* Wallet button removed from header — import from wallet is near holdings inputs */}
         </div>
       </header>
 
@@ -347,7 +363,22 @@ function App() {
         {activeTab === 'grow' && (
           <>
         <section className="input-section">
-          <h2>Your SOL Holdings</h2>
+          <div className="holdings-header">
+            <h2>Your SOL Holdings</h2>
+            <button
+              type="button"
+              className="import-wallet-btn"
+              onClick={importFromWallet}
+              disabled={walletLoading}
+            >
+              {walletLoading ? '⏳ Loading...' : '🔗 Import from Wallet'}
+            </button>
+          </div>
+          {walletImported && (
+            <div className="wallet-imported-notice">
+              ✅ Imported from wallet
+            </div>
+          )}
 
           <div className="input-row">
             <div className="input-group">
@@ -361,16 +392,6 @@ function App() {
                   value={currentSOL || ''}
                   onChange={(e) => setCurrentSOL(e.target.value === '' ? 0 : Number(e.target.value))}
                 />
-                {walletBalance !== null && (
-                  <button
-                    type="button"
-                    className="use-wallet-btn"
-                    onClick={useWalletBalanceForInput}
-                    title={`Use wallet balance: ${walletBalance} SOL`}
-                  >
-                    Use {walletBalance} SOL
-                  </button>
-                )}
               </div>
             </div>
 
@@ -385,16 +406,6 @@ function App() {
                   value={currentJitoSOL || ''}
                   onChange={(e) => setCurrentJitoSOL(e.target.value === '' ? 0 : Number(e.target.value))}
                 />
-                {walletJitoSolBalance !== null && walletJitoSolBalance > 0 && (
-                  <button
-                    type="button"
-                    className="use-wallet-btn"
-                    onClick={useWalletJitoSolForInput}
-                    title={`Use wallet balance: ${walletJitoSolBalance} JitoSOL`}
-                  >
-                    Use {walletJitoSolBalance} JitoSOL
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -1195,7 +1206,13 @@ function App() {
             <div className="monitor-coming-soon">
               <div className="monitor-icon">📡</div>
               <h2>Monitor</h2>
-              <p className="monitor-tagline">Coming Soon</p>
+              <p className="monitor-tagline">Connect your wallet to track your retirement bags in real-time</p>
+              <div className="monitor-wallet-connect">
+                <WalletMultiButton />
+              </div>
+              <p className="monitor-description">
+                Monitor mode integrates directly with liquid staking protocols for real-time tracking and automated DCA
+              </p>
               <div className="monitor-features">
                 <div className="monitor-feature">
                   <span className="feature-icon">📈</span>
@@ -1209,6 +1226,13 @@ function App() {
                   <div className="feature-text">
                     <strong>Withdrawal Reminders</strong>
                     <span>Scheduled alerts for your retirement withdrawals — never miss a distribution</span>
+                  </div>
+                </div>
+                <div className="monitor-feature">
+                  <span className="feature-icon">🔗</span>
+                  <div className="feature-text">
+                    <strong>Jupiter Swap Integration</strong>
+                    <span>Swap SOL → JitoSOL directly within the app — powered by Jupiter</span>
                   </div>
                 </div>
                 <div className="monitor-feature">

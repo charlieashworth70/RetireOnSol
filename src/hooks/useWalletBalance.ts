@@ -1,9 +1,14 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL, Connection, PublicKey } from '@solana/web3.js';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { useState, useEffect, useCallback } from 'react';
+
+const JITOSOL_MINT = new PublicKey('J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn');
+const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
 
 export interface WalletBalanceResult {
   balance: number | null;
+  jitoSolBalance: number | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -24,10 +29,8 @@ declare global {
 }
 
 async function getBalanceFromPhantom(publicKeyStr: string): Promise<number> {
-  // Phantom exposes a connection through window.solana that uses their RPC
   if (window.solana?.isPhantom) {
     try {
-      // Use Phantom's internal connection (they have their own RPC)
       const result = await window.solana.request({
         method: 'getBalance',
         params: { publicKey: publicKeyStr },
@@ -43,26 +46,35 @@ async function getBalanceFromPhantom(publicKeyStr: string): Promise<number> {
 }
 
 async function getBalanceFromDirectRPC(publicKeyStr: string): Promise<number> {
-  // Phantom's public RPC first (most reliable), then fallbacks
-  const endpoints = [
-    'https://solana-mainnet.phantom.app/YBPpkkN4g91xDiAnTE9r0RcMkjg0sKUIWvAfoFVJ',
-  ];
-
-  const connection = new Connection(endpoints[0], 'confirmed');
+  const connection = new Connection(RPC_ENDPOINT, 'confirmed');
   const pubkey = new PublicKey(publicKeyStr);
   const balance = await connection.getBalance(pubkey);
   return balance / LAMPORTS_PER_SOL;
 }
 
+async function getJitoSolBalance(publicKey: PublicKey): Promise<number> {
+  const connection = new Connection(RPC_ENDPOINT, 'confirmed');
+  try {
+    const ata = await getAssociatedTokenAddress(JITOSOL_MINT, publicKey);
+    const accountInfo = await connection.getTokenAccountBalance(ata);
+    return Number(accountInfo.value.uiAmount ?? 0);
+  } catch {
+    // Account doesn't exist = 0 balance
+    return 0;
+  }
+}
+
 export function useWalletBalance(): WalletBalanceResult {
   const { publicKey, connected } = useWallet();
   const [balance, setBalance] = useState<number | null>(null);
+  const [jitoSolBalance, setJitoSolBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBalance = useCallback(async () => {
     if (!publicKey || !connected) {
       setBalance(null);
+      setJitoSolBalance(null);
       return;
     }
 
@@ -72,21 +84,24 @@ export function useWalletBalance(): WalletBalanceResult {
       setLoading(true);
       setError(null);
 
+      // Fetch SOL balance
       let sol: number;
-
-      // Try Phantom's internal method first
       try {
         sol = await getBalanceFromPhantom(pubKeyStr);
       } catch {
-        // Fallback to direct RPC
         sol = await getBalanceFromDirectRPC(pubKeyStr);
       }
 
+      // Fetch JitoSOL balance
+      const jito = await getJitoSolBalance(publicKey);
+
       setBalance(Math.round(sol * 100) / 100);
+      setJitoSolBalance(Math.round(jito * 100) / 100);
     } catch (err) {
       console.error('Failed to fetch balance:', err);
       setError('Could not fetch balance');
       setBalance(null);
+      setJitoSolBalance(null);
     } finally {
       setLoading(false);
     }
@@ -97,9 +112,10 @@ export function useWalletBalance(): WalletBalanceResult {
       fetchBalance();
     } else {
       setBalance(null);
+      setJitoSolBalance(null);
       setError(null);
     }
   }, [connected, publicKey, fetchBalance]);
 
-  return { balance, loading, error, refetch: fetchBalance };
+  return { balance, jitoSolBalance, loading, error, refetch: fetchBalance };
 }

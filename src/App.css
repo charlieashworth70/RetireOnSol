@@ -2042,3 +2042,89 @@ button {
   color: var(--text-secondary);
   opacity: 0.7;
 }
+
+/* iOS Wallet Hint */
+.wallet-ios-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.wallet-ios-icon {
+  font-size: 1.2rem;
+}
+
+.wallet-ios-text {
+  color: var(--sol-green);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.wallet-ios-detail {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+/* Value breakdown (SOL + JitoSOL) */
+.value-breakdown {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  margin-left: 4px;
+}
+
+/* Jupiter Swap Stub */
+.jupiter-section {
+  text-align: center;
+}
+
+.jupiter-swap-stub {
+  padding: 1.5rem 0;
+}
+
+.jupiter-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.jupiter-swap-stub h2 {
+  color: var(--sol-green) !important;
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem !important;
+}
+
+.jupiter-tagline {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.jupiter-terminal-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 2rem;
+  background: var(--bg-input);
+  border-radius: 12px;
+  border: 2px dashed var(--border-color);
+  min-height: 120px;
+  justify-content: center;
+}
+
+.jupiter-coming-soon {
+  color: var(--sol-purple);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.jupiter-hint {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}

@@ -7,6 +7,7 @@ const STORAGE_KEY = 'retireonsol_settings';
 export interface StoredSettings {
   // Grow tab
   currentSOL: number;
+  currentJitoSOL: number;
   years: number;
   dcaAmountUSD: number;
   dcaMaxLimit: number;
@@ -45,6 +46,7 @@ export interface StoredSettings {
 
 export const DEFAULT_SETTINGS: StoredSettings = {
   currentSOL: 0,
+  currentJitoSOL: 0,
   years: 30,
   dcaAmountUSD: 200,
   dcaMaxLimit: 1000,

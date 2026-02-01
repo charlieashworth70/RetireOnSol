@@ -35,6 +35,7 @@ function App() {
 
   // Form state (with localStorage defaults)
   const [currentSOL, setCurrentSOL] = useState<number>(initialSettings.currentSOL ?? DEFAULT_SETTINGS.currentSOL);
+  const [currentJitoSOL, setCurrentJitoSOL] = useState<number>(initialSettings.currentJitoSOL ?? DEFAULT_SETTINGS.currentJitoSOL);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [priceLoading, setPriceLoading] = useState<boolean>(true);
   const [priceError, setPriceError] = useState<string | null>(null);
@@ -122,6 +123,7 @@ function App() {
   useEffect(() => {
     saveSettings({
       currentSOL,
+      currentJitoSOL,
       years,
       dcaAmountUSD,
       dcaMaxLimit,
@@ -142,7 +144,7 @@ function App() {
       jitoSOLAPR,
     });
   }, [
-    currentSOL, years, dcaAmountUSD, dcaMaxLimit, dcaFrequency,
+    currentSOL, currentJitoSOL, years, dcaAmountUSD, dcaMaxLimit, dcaFrequency,
     growthModel, modelParams,
     inflationEnabled, inflationType, inflationRate, inflationAmplitude, inflationCyclePeriod, debasementRate,
     mcEnabled, mcVolatility, mcVolatilityDecay, mcSimulations,
@@ -154,6 +156,7 @@ function App() {
     if (window.confirm('Reset all settings to defaults? This cannot be undone.')) {
       clearSettings();
       setCurrentSOL(DEFAULT_SETTINGS.currentSOL);
+      setCurrentJitoSOL(DEFAULT_SETTINGS.currentJitoSOL);
       setYears(DEFAULT_SETTINGS.years);
       setDcaAmountUSD(DEFAULT_SETTINGS.dcaAmountUSD);
       setDcaMaxLimit(DEFAULT_SETTINGS.dcaMaxLimit);
@@ -182,20 +185,29 @@ function App() {
     }
   }, []);
 
-  // Track wallet balance for "Use Wallet Balance" button
+  // Track wallet balances for "Use Wallet Balance" buttons
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [walletJitoSolBalance, setWalletJitoSolBalance] = useState<number | null>(null);
 
   // Handle wallet balance loaded
-  const handleWalletBalance = useCallback((balance: number) => {
-    setWalletBalance(balance);
+  const handleWalletBalance = useCallback((solBalance: number, jitoSolBalance: number) => {
+    setWalletBalance(solBalance);
+    setWalletJitoSolBalance(jitoSolBalance);
   }, []);
 
-  // Apply wallet balance to input
+  // Apply wallet SOL balance to input
   const useWalletBalanceForInput = useCallback(() => {
     if (walletBalance !== null) {
       setCurrentSOL(walletBalance);
     }
   }, [walletBalance]);
+
+  // Apply wallet JitoSOL balance to input
+  const useWalletJitoSolForInput = useCallback(() => {
+    if (walletJitoSolBalance !== null) {
+      setCurrentJitoSOL(walletJitoSolBalance);
+    }
+  }, [walletJitoSolBalance]);
 
   // Effective model params with dynamic ceiling for scurve
   const effectiveModelParams = useMemo(() => ({
@@ -205,10 +217,13 @@ function App() {
   }), [modelParams, dynamicCeiling]);
 
   // Calculate projections
+  // When JitoSOL staking is enabled, JitoSOL holdings are included in the total SOL
+  // since JitoSOL ≈ SOL (liquid staking token) and earns the JitoSOL APR
+  const effectiveSOL = jitoSOLEnabled ? currentSOL + currentJitoSOL : currentSOL + currentJitoSOL;
   const projection = useMemo<ProjectionResult | null>(() => {
     if (currentPrice === null) return null;
     const input: ProjectionInput = {
-      currentSOL,
+      currentSOL: effectiveSOL,
       currentPrice,
       years,
       dcaAmountUSD,
@@ -219,7 +234,7 @@ function App() {
       jitoSOLAPR,
     };
     return calculateProjection(input);
-  }, [currentSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, growthModel, effectiveModelParams, jitoSOLEnabled, jitoSOLAPR]);
+  }, [effectiveSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, growthModel, effectiveModelParams, jitoSOLEnabled, jitoSOLAPR]);
 
   // Inflation params for today's dollars calculation
   const inflationParams: InflationParams = useMemo(() => ({
@@ -267,7 +282,7 @@ function App() {
     // Small delay ensures spinner is visible even on fast machines
     const timeoutId = setTimeout(() => {
       const result = runMonteCarloSimulation(
-        currentSOL,
+        effectiveSOL,
         currentPrice,
         years,
         dcaAmountUSD,
@@ -283,7 +298,7 @@ function App() {
     }, 50);
 
     return () => clearTimeout(timeoutId);
-  }, [mcEnabled, currentSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, growthModel, effectiveModelParams, mcParams, jitoSOLEnabled, jitoSOLAPR]);
+  }, [mcEnabled, effectiveSOL, currentPrice, years, dcaAmountUSD, dcaFrequency, growthModel, effectiveModelParams, mcParams, jitoSOLEnabled, jitoSOLAPR]);
 
   return (
     <div className="app">
@@ -360,6 +375,32 @@ function App() {
             </div>
 
             <div className="input-group">
+              <label htmlFor="currentJitoSOL">Current JitoSOL</label>
+              <div className="sol-input-wrapper">
+                <input
+                  id="currentJitoSOL"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={currentJitoSOL || ''}
+                  onChange={(e) => setCurrentJitoSOL(e.target.value === '' ? 0 : Number(e.target.value))}
+                />
+                {walletJitoSolBalance !== null && walletJitoSolBalance > 0 && (
+                  <button
+                    type="button"
+                    className="use-wallet-btn"
+                    onClick={useWalletJitoSolForInput}
+                    title={`Use wallet balance: ${walletJitoSolBalance} JitoSOL`}
+                  >
+                    Use {walletJitoSolBalance} JitoSOL
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="input-row">
+            <div className="input-group">
               <label>Current Price</label>
               <div className="price-display">
                 {priceLoading ? (
@@ -375,7 +416,10 @@ function App() {
 
           {currentPrice !== null && (
             <div className="current-value-display">
-              Current Value: <span className="highlight">{formatUSD(currentSOL * currentPrice)}</span>
+              Current Value: <span className="highlight">{formatUSD((currentSOL + currentJitoSOL) * currentPrice)}</span>
+              {currentJitoSOL > 0 && (
+                <span className="value-breakdown"> ({currentSOL} SOL + {currentJitoSOL} JitoSOL)</span>
+              )}
             </div>
           )}
 
@@ -1107,6 +1151,46 @@ function App() {
         )}
         {/* MONITOR TAB */}
         {activeTab === 'monitor' && (
+          <>
+          {/* Jupiter Swap Stub */}
+          <section className="input-section jupiter-section">
+            <div className="jupiter-swap-stub">
+              <div className="jupiter-icon">🔄</div>
+              <h2>Swap SOL → JitoSOL</h2>
+              <p className="jupiter-tagline">Stake your SOL to earn ~7-8% APR with Jito&apos;s MEV-boosted liquid staking</p>
+              <div className="jupiter-placeholder">
+                {/*
+                  Jupiter Terminal Integration (coming soon)
+                  
+                  1. Add script tag to index.html:
+                     <script src="https://terminal.jup.ag/main-v3.js"></script>
+                  
+                  2. Initialize Jupiter Terminal:
+                     window.Jupiter.init({
+                       displayMode: 'integrated',
+                       integratedTargetId: 'jupiter-terminal',
+                       endpoint: 'https://api.mainnet-beta.solana.com',
+                       defaultExplorer: 'Solscan',
+                       formProps: {
+                         initialInputMint: 'So11111111111111111111111111111111111111112', // SOL
+                         initialOutputMint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', // JitoSOL
+                         fixedOutputMint: true,
+                       },
+                     });
+                  
+                  3. Add container div:
+                     <div id="jupiter-terminal" style={{ minHeight: 400 }} />
+                  
+                  Reference: https://terminal.jup.ag/
+                */}
+                <div id="jupiter-terminal" className="jupiter-terminal-placeholder">
+                  <span className="jupiter-coming-soon">Jupiter Terminal integration coming soon</span>
+                  <span className="jupiter-hint">Swap directly within the app — no need to leave RetireOnSol</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section className="input-section monitor-section">
             <div className="monitor-coming-soon">
               <div className="monitor-icon">📡</div>
@@ -1117,7 +1201,7 @@ function App() {
                   <span className="feature-icon">📈</span>
                   <div className="feature-text">
                     <strong>DCA Reminders</strong>
-                    <span>Get notified when it's time to buy — stay on track with your accumulation plan</span>
+                    <span>Get notified when it&apos;s time to buy — stay on track with your accumulation plan</span>
                   </div>
                 </div>
                 <div className="monitor-feature">
@@ -1140,6 +1224,7 @@ function App() {
               </p>
             </div>
           </section>
+          </>
         )}
       </main>
 
@@ -1167,7 +1252,7 @@ function App() {
           <p>Past performance does not indicate future returns. Always do your own research.</p>
         </div>
         <p className="footer-copyright">&copy; {new Date().getFullYear()} RetireOnSol. All rights reserved.</p>
-        <p className="footer-version">v3.0.0-alpha.1</p>
+        <p className="footer-version">v3.0.0-alpha.2</p>
       </footer>
     </div>
   );

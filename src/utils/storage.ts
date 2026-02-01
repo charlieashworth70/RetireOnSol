@@ -117,3 +117,50 @@ export function clearSettings(): void {
     console.warn('Failed to clear settings from localStorage:', err);
   }
 }
+
+/**
+ * Active Plan - snapshot of settings when user clicks "Execute Plan"
+ */
+const ACTIVE_PLAN_KEY = 'retireonsol_active_plan';
+
+export interface ActivePlan {
+  activatedAt: string; // ISO date
+  settings: StoredSettings; // snapshot of all settings at time of execution
+}
+
+/**
+ * Save the active plan to localStorage
+ */
+export function saveActivePlan(plan: ActivePlan): void {
+  try {
+    localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(plan));
+  } catch (err) {
+    console.warn('Failed to save active plan to localStorage:', err);
+  }
+}
+
+/**
+ * Load the active plan from localStorage
+ */
+export function loadActivePlan(): ActivePlan | null {
+  try {
+    const stored = localStorage.getItem(ACTIVE_PLAN_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (err) {
+    console.warn('Failed to load active plan from localStorage:', err);
+  }
+  return null;
+}
+
+/**
+ * Clear the active plan from localStorage
+ */
+export function clearActivePlan(): void {
+  try {
+    localStorage.removeItem(ACTIVE_PLAN_KEY);
+  } catch (err) {
+    console.warn('Failed to clear active plan from localStorage:', err);
+  }
+}

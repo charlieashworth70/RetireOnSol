@@ -12,7 +12,7 @@ import { getModelDisplayName, getModelDescription, getFuturePowerLawFairValue, t
 import { toTodaysDollars, type InflationParams } from './utils/inflation';
 import { runMonteCarloSimulation, type MonteCarloParams, type MonteCarloResult, type VolatilityDecayType } from './utils/monteCarlo';
 import { fetchSOLPrice, startPriceRefresh } from './utils/solPrice';
-import { loadSettings, saveSettings, clearSettings, DEFAULT_SETTINGS } from './utils/storage';
+import { loadSettings, saveSettings, clearSettings, saveActivePlan, loadActivePlan, clearActivePlan, DEFAULT_SETTINGS, type ActivePlan, type StoredSettings } from './utils/storage';
 import { GrowthChart } from './components/GrowthChart';
 import { ComparisonChart } from './components/ComparisonChart';
 import { SpendTab } from './components/SpendTab';
@@ -24,14 +24,21 @@ import { shareProjection } from './utils/shareImage';
 import './App.css';
 
 type DCAFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
-type AppTab = 'grow' | 'spend' | 'monitor';
+type MainTab = 'plan' | 'monitor';
+type PlanSubTab = 'grow' | 'spend';
+type MonitorSubTab = 'accum' | 'decum';
 
 // Load initial settings from localStorage
 const initialSettings = loadSettings();
 
 function App() {
-  // Tab state
-  const [activeTab, setActiveTab] = useState<AppTab>('grow');
+  // Tab state - two-level navigation
+  const [mainTab, setMainTab] = useState<MainTab>('plan');
+  const [planTab, setPlanTab] = useState<PlanSubTab>('grow');
+  const [monitorTab, setMonitorTab] = useState<MonitorSubTab>('accum');
+
+  // Active plan state
+  const [activePlan, setActivePlan] = useState<ActivePlan | null>(() => loadActivePlan());
 
   // Spend Now mode - skip grow phase and go straight to spend
   const [spendNowMode, setSpendNowMode] = useState(false);
@@ -188,6 +195,54 @@ function App() {
     }
   }, []);
 
+  // Execute Plan handler - saves current settings as active plan
+  const executePlan = useCallback(() => {
+    const currentSettings: StoredSettings = {
+      currentSOL,
+      currentJitoSOL,
+      years,
+      dcaAmountUSD,
+      dcaMaxLimit,
+      dcaFrequency,
+      growthModel,
+      modelParams,
+      inflationEnabled,
+      inflationType,
+      inflationRate,
+      inflationAmplitude,
+      inflationCyclePeriod,
+      debasementRate,
+      mcEnabled,
+      mcVolatility,
+      mcVolatilityDecay,
+      mcSimulations,
+      jitoSOLEnabled,
+      jitoSOLAPR,
+      spendMonthlyIncome: DEFAULT_SETTINGS.spendMonthlyIncome,
+      spendMonthlyIncomeMax: DEFAULT_SETTINGS.spendMonthlyIncomeMax,
+      spendRetirementYears: DEFAULT_SETTINGS.spendRetirementYears,
+      spendVolatility: DEFAULT_SETTINGS.spendVolatility,
+      spendRealGrowthRate: DEFAULT_SETTINGS.spendRealGrowthRate,
+      spendInflationRate: DEFAULT_SETTINGS.spendInflationRate,
+      spendSimulations: DEFAULT_SETTINGS.spendSimulations,
+    };
+    const plan: ActivePlan = {
+      activatedAt: new Date().toISOString(),
+      settings: currentSettings,
+    };
+    saveActivePlan(plan);
+    setActivePlan(plan);
+    setMainTab('monitor');
+    setMonitorTab('accum');
+  }, [currentSOL, currentJitoSOL, years, dcaAmountUSD, dcaMaxLimit, dcaFrequency, growthModel, modelParams, inflationEnabled, inflationType, inflationRate, inflationAmplitude, inflationCyclePeriod, debasementRate, mcEnabled, mcVolatility, mcVolatilityDecay, mcSimulations, jitoSOLEnabled, jitoSOLAPR]);
+
+  // Cancel execution handler
+  const cancelExecution = useCallback(() => {
+    clearActivePlan();
+    setActivePlan(null);
+    setMainTab('plan');
+  }, []);
+
   // Wallet integration for "Import from Wallet"
   const { connected } = useWallet();
   const { setVisible: setWalletModalVisible } = useWalletModal();
@@ -331,36 +386,67 @@ function App() {
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <nav className="tab-nav">
+      {/* Main Tab Navigation */}
+      <nav className="main-tab-nav">
         <button
           type="button"
-          className={`tab-btn ${activeTab === 'grow' ? 'active' : ''}`}
-          onClick={() => setActiveTab('grow')}
+          className={`main-tab-btn ${mainTab === 'plan' ? 'active' : ''}`}
+          onClick={() => setMainTab('plan')}
         >
-          <span className="tab-phase">Plan</span>
-          <span className="tab-label">Grow</span>
+          Plan
         </button>
         <button
           type="button"
-          className={`tab-btn ${activeTab === 'spend' ? 'active' : ''}`}
-          onClick={() => setActiveTab('spend')}
+          className={`main-tab-btn ${mainTab === 'monitor' ? 'active' : ''}`}
+          onClick={() => setMainTab('monitor')}
         >
-          <span className="tab-phase">Plan</span>
-          <span className="tab-label">Spend</span>
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === 'monitor' ? 'active' : ''}`}
-          onClick={() => setActiveTab('monitor')}
-        >
-          <span className="tab-label">Monitor</span>
+          Monitor
+          {activePlan && <span className="active-plan-badge">Active</span>}
         </button>
       </nav>
 
+      {/* Sub Tab Navigation */}
+      {mainTab === 'plan' && (
+        <nav className="sub-tab-nav">
+          <button
+            type="button"
+            className={`sub-tab-btn ${planTab === 'grow' ? 'active' : ''}`}
+            onClick={() => setPlanTab('grow')}
+          >
+            Grow
+          </button>
+          <button
+            type="button"
+            className={`sub-tab-btn ${planTab === 'spend' ? 'active' : ''}`}
+            onClick={() => setPlanTab('spend')}
+          >
+            Spend
+          </button>
+        </nav>
+      )}
+
+      {mainTab === 'monitor' && (
+        <nav className="sub-tab-nav">
+          <button
+            type="button"
+            className={`sub-tab-btn ${monitorTab === 'accum' ? 'active' : ''}`}
+            onClick={() => setMonitorTab('accum')}
+          >
+            Accum
+          </button>
+          <button
+            type="button"
+            className={`sub-tab-btn ${monitorTab === 'decum' ? 'active' : ''}`}
+            onClick={() => setMonitorTab('decum')}
+          >
+            Decum
+          </button>
+        </nav>
+      )}
+
       <main className="main">
         {/* GROW TAB */}
-        {activeTab === 'grow' && (
+        {mainTab === 'plan' && planTab === 'grow' && (
           <>
         <section className="input-section">
           <div className="holdings-header">
@@ -1134,8 +1220,24 @@ function App() {
           </>
         )}
 
+        {/* Execute Plan Button - shown at bottom of Plan tab */}
+        {mainTab === 'plan' && (
+          <div className="execute-plan-container">
+            <button
+              type="button"
+              className="execute-plan-btn"
+              onClick={executePlan}
+            >
+              🚀 Execute Plan
+            </button>
+            <p className="execute-plan-hint">
+              Save your current plan settings and start tracking progress
+            </p>
+          </div>
+        )}
+
         {/* SPEND TAB */}
-        {activeTab === 'spend' && (
+        {mainTab === 'plan' && planTab === 'spend' && (
           <SpendTab
             startingSOL={
               spendNowMode
@@ -1161,93 +1263,159 @@ function App() {
           />
         )}
         {/* MONITOR TAB */}
-        {activeTab === 'monitor' && (
+        {mainTab === 'monitor' && (
           <>
-          {/* Jupiter Swap Stub */}
-          <section className="input-section jupiter-section">
-            <div className="jupiter-swap-stub">
-              <div className="jupiter-icon">🔄</div>
-              <h2>Swap SOL → JitoSOL</h2>
-              <p className="jupiter-tagline">Stake your SOL to earn ~7-8% APR with Jito&apos;s MEV-boosted liquid staking</p>
-              <div className="jupiter-placeholder">
-                {/*
-                  Jupiter Terminal Integration (coming soon)
-                  
-                  1. Add script tag to index.html:
-                     <script src="https://terminal.jup.ag/main-v3.js"></script>
-                  
-                  2. Initialize Jupiter Terminal:
-                     window.Jupiter.init({
-                       displayMode: 'integrated',
-                       integratedTargetId: 'jupiter-terminal',
-                       endpoint: 'https://api.mainnet-beta.solana.com',
-                       defaultExplorer: 'Solscan',
-                       formProps: {
-                         initialInputMint: 'So11111111111111111111111111111111111111112', // SOL
-                         initialOutputMint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', // JitoSOL
-                         fixedOutputMint: true,
-                       },
-                     });
-                  
-                  3. Add container div:
-                     <div id="jupiter-terminal" style={{ minHeight: 400 }} />
-                  
-                  Reference: https://terminal.jup.ag/
-                */}
-                <div id="jupiter-terminal" className="jupiter-terminal-placeholder">
-                  <span className="jupiter-coming-soon">Jupiter Terminal integration coming soon</span>
-                  <span className="jupiter-hint">Swap directly within the app — no need to leave RetireOnSol</span>
+            {!activePlan ? (
+              <section className="input-section monitor-section">
+                <div className="monitor-no-plan">
+                  <div className="monitor-icon">📋</div>
+                  <h2>No Active Plan</h2>
+                  <p className="monitor-description">
+                    Go to the Plan tab to configure your accumulation and spending strategy, then click &quot;Execute Plan&quot; to start tracking.
+                  </p>
+                  <button
+                    type="button"
+                    className="go-to-plan-btn"
+                    onClick={() => setMainTab('plan')}
+                  >
+                    Go to Plan →
+                  </button>
                 </div>
-              </div>
-            </div>
-          </section>
+              </section>
+            ) : (
+              <>
+                <section className="input-section monitor-plan-active">
+                  <div className="plan-activated-banner">
+                    ✅ Plan activated on {new Date(activePlan.activatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </div>
+                </section>
 
-          <section className="input-section monitor-section">
-            <div className="monitor-coming-soon">
-              <div className="monitor-icon">📡</div>
-              <h2>Monitor</h2>
-              <p className="monitor-tagline">Connect your wallet to track your retirement bags in real-time</p>
-              <div className="monitor-wallet-connect">
-                <WalletMultiButton />
-              </div>
-              <p className="monitor-description">
-                Monitor mode integrates directly with liquid staking protocols for real-time tracking and automated DCA
-              </p>
-              <div className="monitor-features">
-                <div className="monitor-feature">
-                  <span className="feature-icon">📈</span>
-                  <div className="feature-text">
-                    <strong>DCA Reminders</strong>
-                    <span>Get notified when it&apos;s time to buy — stay on track with your accumulation plan</span>
-                  </div>
+                {/* ACCUM SUB-TAB */}
+                {monitorTab === 'accum' && (
+                  <section className="input-section monitor-section">
+                    <h2>Accumulation Tracker</h2>
+                    <div className="monitor-plan-summary">
+                      <div className="plan-summary-grid">
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">Starting SOL</span>
+                          <span className="plan-summary-value">{activePlan.settings.currentSOL}</span>
+                        </div>
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">Starting JitoSOL</span>
+                          <span className="plan-summary-value">{activePlan.settings.currentJitoSOL}</span>
+                        </div>
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">DCA Amount</span>
+                          <span className="plan-summary-value">${activePlan.settings.dcaAmountUSD}/{activePlan.settings.dcaFrequency}</span>
+                        </div>
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">Target Years</span>
+                          <span className="plan-summary-value">{activePlan.settings.years}</span>
+                        </div>
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">Growth Model</span>
+                          <span className="plan-summary-value">{activePlan.settings.growthModel.toUpperCase()}</span>
+                        </div>
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">JitoSOL Staking</span>
+                          <span className="plan-summary-value">{activePlan.settings.jitoSOLEnabled ? `${(activePlan.settings.jitoSOLAPR * 100).toFixed(1)}% APR` : 'Off'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="monitor-wallet-connect">
+                      <WalletMultiButton />
+                    </div>
+                    <p className="monitor-description">Connect your wallet to track progress</p>
+
+                    <div className="monitor-coming-soon-features">
+                      <h3>Coming Soon</h3>
+                      <div className="monitor-features">
+                        <div className="monitor-feature">
+                          <span className="feature-icon">📈</span>
+                          <div className="feature-text">
+                            <strong>DCA Reminders</strong>
+                            <span>Get notified when it&apos;s time to buy</span>
+                          </div>
+                        </div>
+                        <div className="monitor-feature">
+                          <span className="feature-icon">📊</span>
+                          <div className="feature-text">
+                            <strong>Progress Tracking</strong>
+                            <span>Track your SOL accumulation vs the plan</span>
+                          </div>
+                        </div>
+                        <div className="monitor-feature">
+                          <span className="feature-icon">🔗</span>
+                          <div className="feature-text">
+                            <strong>Jupiter Swap Integration</strong>
+                            <span>Swap SOL → JitoSOL directly in-app</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* DECUM SUB-TAB */}
+                {monitorTab === 'decum' && (
+                  <section className="input-section monitor-section">
+                    <h2>Decumulation Tracker</h2>
+                    <div className="monitor-plan-summary">
+                      <div className="plan-summary-grid">
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">Monthly Income</span>
+                          <span className="plan-summary-value">${activePlan.settings.spendMonthlyIncome?.toLocaleString() ?? 'N/A'}</span>
+                        </div>
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">Retirement Years</span>
+                          <span className="plan-summary-value">{activePlan.settings.spendRetirementYears ?? 'N/A'}</span>
+                        </div>
+                        <div className="plan-summary-item">
+                          <span className="plan-summary-label">Inflation Rate</span>
+                          <span className="plan-summary-value">{activePlan.settings.spendInflationRate ? `${(activePlan.settings.spendInflationRate * 100).toFixed(1)}%` : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="monitor-wallet-connect">
+                      <WalletMultiButton />
+                    </div>
+                    <p className="monitor-description">Connect your wallet to track withdrawals</p>
+
+                    <div className="monitor-coming-soon-features">
+                      <h3>Coming Soon</h3>
+                      <div className="monitor-features">
+                        <div className="monitor-feature">
+                          <span className="feature-icon">💸</span>
+                          <div className="feature-text">
+                            <strong>Withdrawal Reminders</strong>
+                            <span>Scheduled alerts for retirement withdrawals</span>
+                          </div>
+                        </div>
+                        <div className="monitor-feature">
+                          <span className="feature-icon">🔔</span>
+                          <div className="feature-text">
+                            <strong>Balance Monitoring</strong>
+                            <span>Track portfolio health during drawdown</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                <div className="cancel-execution-container">
+                  <button
+                    type="button"
+                    className="cancel-execution-btn"
+                    onClick={cancelExecution}
+                  >
+                    ← Back to Planning
+                  </button>
                 </div>
-                <div className="monitor-feature">
-                  <span className="feature-icon">💸</span>
-                  <div className="feature-text">
-                    <strong>Withdrawal Reminders</strong>
-                    <span>Scheduled alerts for your retirement withdrawals — never miss a distribution</span>
-                  </div>
-                </div>
-                <div className="monitor-feature">
-                  <span className="feature-icon">🔗</span>
-                  <div className="feature-text">
-                    <strong>Jupiter Swap Integration</strong>
-                    <span>Swap SOL → JitoSOL directly within the app — powered by Jupiter</span>
-                  </div>
-                </div>
-                <div className="monitor-feature">
-                  <span className="feature-icon">🔔</span>
-                  <div className="feature-text">
-                    <strong>Price Alerts</strong>
-                    <span>Notifications when SOL hits your target prices — buy the dips, celebrate the rips</span>
-                  </div>
-                </div>
-              </div>
-              <p className="monitor-note">
-                PWA push notifications • Zero cost • No account needed
-              </p>
-            </div>
-          </section>
+              </>
+            )}
           </>
         )}
       </main>
@@ -1276,7 +1444,7 @@ function App() {
           <p>Past performance does not indicate future returns. Always do your own research.</p>
         </div>
         <p className="footer-copyright">&copy; {new Date().getFullYear()} RetireOnSol. All rights reserved.</p>
-        <p className="footer-version">v3.0.0-alpha.2</p>
+        <p className="footer-version">v3.0.0-alpha.3</p>
       </footer>
     </div>
   );

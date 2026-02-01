@@ -1606,12 +1606,12 @@ button {
 }
 
 /* ============================================
-   Tab Navigation
+   Main Tab Navigation (Plan | Monitor)
    ============================================ */
-.tab-nav {
+.main-tab-nav {
   display: flex;
   gap: 0;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   background: linear-gradient(
     to bottom,
     #1a1a1a 0%,
@@ -1620,36 +1620,40 @@ button {
     #2a2a2a 80%,
     #1a1a1a 100%
   );
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid #444;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
   padding: 4px;
   overflow: hidden;
 }
 
-.tab-btn {
+.main-tab-btn {
   flex: 1;
-  padding: 12px 16px;
+  padding: 14px 20px;
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
-  border-radius: 8px;
+  border-radius: 10px;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.tab-btn:hover:not(.active) {
+.main-tab-btn:hover:not(.active) {
   color: var(--text-primary);
   background: rgba(255,255,255,0.05);
 }
 
-.tab-btn.active {
+.main-tab-btn.active {
   background: linear-gradient(135deg, var(--sol-purple), var(--sol-green));
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
   box-shadow:
     0 2px 4px rgba(0,0,0,0.4),
@@ -1657,11 +1661,234 @@ button {
     inset 0 -1px 0 rgba(0,0,0,0.2);
 }
 
-.tab-btn.active:active {
+.main-tab-btn.active:active {
   box-shadow:
     0 1px 2px rgba(0,0,0,0.4),
     inset 0 -1px 0 rgba(255,255,255,0.2),
     inset 0 1px 0 rgba(0,0,0,0.2);
+}
+
+/* Active plan badge on Monitor tab */
+.active-plan-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--sol-green);
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.main-tab-btn.active .active-plan-badge {
+  background: rgba(255,255,255,0.3);
+  color: #fff;
+}
+
+/* ============================================
+   Sub Tab Navigation (Grow|Spend, Accum|Decum)
+   ============================================ */
+.sub-tab-nav {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  padding: 3px;
+  overflow: hidden;
+}
+
+.sub-tab-btn {
+  flex: 1;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 6px;
+  position: relative;
+}
+
+.sub-tab-btn:hover:not(.active) {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.05);
+}
+
+.sub-tab-btn.active {
+  background: var(--bg-input);
+  color: var(--sol-green);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* ============================================
+   Execute Plan Button
+   ============================================ */
+.execute-plan-container {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.execute-plan-btn {
+  padding: 14px 32px;
+  background: linear-gradient(135deg, var(--sol-purple), var(--sol-green));
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(153, 69, 255, 0.3);
+  letter-spacing: 0.02em;
+}
+
+.execute-plan-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 24px rgba(153, 69, 255, 0.4);
+}
+
+.execute-plan-btn:active {
+  transform: scale(0.98);
+}
+
+.execute-plan-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   Cancel Execution / Back to Planning
+   ============================================ */
+.cancel-execution-container {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.cancel-execution-btn {
+  padding: 10px 24px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-execution-btn:hover {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.05);
+}
+
+/* ============================================
+   Go to Plan button (when no active plan)
+   ============================================ */
+.go-to-plan-btn {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--sol-purple), var(--sol-green));
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1rem;
+}
+
+.go-to-plan-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(153, 69, 255, 0.3);
+}
+
+.monitor-no-plan {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.monitor-no-plan h2 {
+  color: var(--text-secondary) !important;
+  font-size: 1.3rem;
+}
+
+/* ============================================
+   Plan Activated Banner
+   ============================================ */
+.plan-activated-banner {
+  padding: 0.75rem 1rem;
+  background: rgba(20, 241, 149, 0.1);
+  border: 1px solid rgba(20, 241, 149, 0.3);
+  border-radius: 8px;
+  color: var(--sol-green);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.monitor-plan-active {
+  padding: 0.75rem 1.25rem !important;
+}
+
+/* ============================================
+   Monitor Plan Summary Grid
+   ============================================ */
+.monitor-plan-summary {
+  margin: 1rem 0;
+}
+
+.plan-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.plan-summary-item {
+  background: var(--bg-input);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.plan-summary-label {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.plan-summary-value {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sol-green);
+}
+
+/* Coming soon features in monitor */
+.monitor-coming-soon-features {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.monitor-coming-soon-features h3 {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 /* ============================================
@@ -1718,8 +1945,11 @@ button {
 
 /* Mobile touch targets for tabs */
 @media (hover: none) and (pointer: coarse) {
-  .tab-btn {
-    min-height: 44px;
+  .main-tab-btn {
+    min-height: 48px;
+  }
+  .sub-tab-btn {
+    min-height: 40px;
   }
 }
 
@@ -1950,31 +2180,7 @@ button {
   margin-bottom: 1rem;
 }
 
-/* ============================================
-   Tab Phase Labels (Plan > Grow, Plan > Spend)
-   ============================================ */
-.tab-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-}
-
-.tab-phase {
-  font-size: 0.55rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.6;
-  font-weight: 400;
-}
-
-.tab-btn.active .tab-phase {
-  opacity: 0.8;
-}
-
-.tab-label {
-  font-size: 0.95rem;
-}
+/* Tab phase labels removed — now using two-level tabs */
 
 /* ============================================
    JitoSOL Staking Section

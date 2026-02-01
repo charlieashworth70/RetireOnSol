@@ -31,7 +31,7 @@ interface WithdrawalScheduleResult {
 function calculateWithdrawalSchedule(
   activatedAt: string,
   monthlyIncome: number,
-  retirementYears: number,
+  _retirementYears: number,
   startingValueUSD: number,
   now?: Date
 ): WithdrawalScheduleResult {

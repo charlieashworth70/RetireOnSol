@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWalletBalance } from '../hooks/useWalletBalance';
 
 function isIOS(): boolean {
@@ -14,8 +14,7 @@ interface WalletButtonProps {
 }
 
 export function WalletButton({ onBalanceLoaded }: WalletButtonProps) {
-  const { connected, disconnect, publicKey, wallets } = useWallet();
-  const { setVisible } = useWalletModal();
+  const { connected, wallets } = useWallet();
   const { balance, jitoSolBalance, loading } = useWalletBalance();
 
   // Notify parent when balances are loaded
@@ -27,21 +26,8 @@ export function WalletButton({ onBalanceLoaded }: WalletButtonProps) {
 
   const showIOSMessage = useMemo(() => {
     if (!isIOS()) return false;
-    // No wallets detected on iOS = user is in Safari, not a wallet browser
     return wallets.length === 0 || wallets.every(w => w.readyState === 'NotDetected');
   }, [wallets]);
-
-  const handleClick = () => {
-    if (connected) {
-      disconnect();
-    } else {
-      setVisible(true);
-    }
-  };
-
-  const shortAddress = publicKey
-    ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`
-    : '';
 
   // iOS Safari with no wallet available
   if (showIOSMessage && !connected) {
@@ -57,25 +43,16 @@ export function WalletButton({ onBalanceLoaded }: WalletButtonProps) {
   }
 
   return (
-    <button
-      type="button"
-      className={`wallet-btn ${connected ? 'connected' : ''}`}
-      onClick={handleClick}
-    >
-      {connected ? (
-        <>
-          <span className="wallet-address">{shortAddress}</span>
-          {loading ? (
-            <span className="wallet-balance">Loading...</span>
-          ) : balance !== null ? (
-            <span className="wallet-balance">
-              {balance} SOL{jitoSolBalance && jitoSolBalance > 0 ? ` | ${jitoSolBalance} JitoSOL` : ''}
-            </span>
-          ) : null}
-        </>
-      ) : (
-        'Connect Wallet'
+    <div className="wallet-button-wrapper">
+      <WalletMultiButton />
+      {connected && !loading && balance !== null && (
+        <span className="wallet-balance-display">
+          {balance} SOL{jitoSolBalance && jitoSolBalance > 0 ? ` | ${jitoSolBalance} JitoSOL` : ''}
+        </span>
       )}
-    </button>
+      {connected && loading && (
+        <span className="wallet-balance-display">Loading...</span>
+      )}
+    </div>
   );
 }

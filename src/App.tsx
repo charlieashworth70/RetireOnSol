@@ -16,6 +16,7 @@ import { loadSettings, saveSettings, clearSettings, saveActivePlan, loadActivePl
 import { GrowthChart } from './components/GrowthChart';
 import { ComparisonChart } from './components/ComparisonChart';
 import { SpendTab } from './components/SpendTab';
+import { CancelPlanModal } from './components/CancelPlanModal';
 import { useWalletBalance } from './hooks/useWalletBalance';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -39,6 +40,7 @@ function App() {
 
   // Active plan state
   const [activePlan, setActivePlan] = useState<ActivePlan | null>(() => loadActivePlan());
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   // Spend Now mode - skip grow phase and go straight to spend
   const [spendNowMode, setSpendNowMode] = useState(false);
@@ -236,10 +238,11 @@ function App() {
     setMonitorTab('accum');
   }, [currentSOL, currentJitoSOL, years, dcaAmountUSD, dcaMaxLimit, dcaFrequency, growthModel, modelParams, inflationEnabled, inflationType, inflationRate, inflationAmplitude, inflationCyclePeriod, debasementRate, mcEnabled, mcVolatility, mcVolatilityDecay, mcSimulations, jitoSOLEnabled, jitoSOLAPR]);
 
-  // Cancel execution handler
+  // Cancel execution handler (confirmed from modal)
   const cancelExecution = useCallback(() => {
     clearActivePlan();
     setActivePlan(null);
+    setShowCancelModal(false);
     setMainTab('plan');
   }, []);
 
@@ -1409,11 +1412,20 @@ function App() {
                   <button
                     type="button"
                     className="cancel-execution-btn"
-                    onClick={cancelExecution}
+                    onClick={() => setShowCancelModal(true)}
                   >
                     ← Back to Planning
                   </button>
                 </div>
+
+                {showCancelModal && activePlan && (
+                  <CancelPlanModal
+                    activePlan={activePlan}
+                    currentPrice={currentPrice}
+                    onConfirm={cancelExecution}
+                    onClose={() => setShowCancelModal(false)}
+                  />
+                )}
               </>
             )}
           </>

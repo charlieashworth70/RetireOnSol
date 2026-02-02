@@ -1,0 +1,39 @@
+{
+  "assets": {
+    "android/assets/icon-512.png": {
+      "path": "android/assets/icon-512.png",
+      "sha256": "6qcVtat4BG7ncMszMBMqoEWMNHJsT0HSS/RtnWYyeoM=",
+      "uri": "https://arweave.net/6bkt0ZgCZjVgaSY8GmUaXjgJKzRIGEMd4cYO3gD2mm0"
+    },
+    "android/RetireOnSol-v1.0.0-final.apk": {
+      "path": "android/RetireOnSol-v1.0.0-final.apk",
+      "sha256": "v2yKFzSK25G4QdvvLqaxKb9ImxnU+RCdqTzTNQyI5tY=",
+      "uri": "https://arweave.net/fe8lbC6lhTMRgYFqz8tiq-3lHdyPRt6oayF8hWCRQHU"
+    },
+    "android/assets/banner.png": {
+      "path": "android/assets/banner.png",
+      "sha256": "VZzC2Inesl7twwzOXLRErWo5Eh7mdsPWx8AABc4LO4s=",
+      "uri": "https://arweave.net/pD3ebTsCHNoZBYeS-8wzpcH_yD2ngWZI0F9JTe4Uo4A"
+    },
+    "android/assets/screenshot-1.png": {
+      "path": "android/assets/screenshot-1.png",
+      "sha256": "vGFkzaEtsoq06qQFm1zpzZBdlqGDtEJZ7GQNWGZ7ep8=",
+      "uri": "https://arweave.net/U5rmDIO1k_h-LQbjv3RqHmc3rcGlyyadainbbUKNnzQ"
+    },
+    "android/assets/screenshot-2.png": {
+      "path": "android/assets/screenshot-2.png",
+      "sha256": "SB7cfCO9A/wKnO1V9pbqBgTvSFX53fQsX394KGI8hW8=",
+      "uri": "https://arweave.net/_Wqg0-w2p2nkO6xugtcSyORDUsiBsgB2H05A7XmbKp0"
+    },
+    "android/assets/screenshot-3.png": {
+      "path": "android/assets/screenshot-3.png",
+      "sha256": "lLaq4OwfiqFMJDr3Hp01LZAkL1kPW0kRsUNG1rWCcdU=",
+      "uri": "https://arweave.net/KsaW2Lp37vVCB8VpQJgIpCr3hZbHYRnvjKUtKWPyttg"
+    },
+    "android/assets/screenshot-4.png": {
+      "path": "android/assets/screenshot-4.png",
+      "sha256": "lLaq4OwfiqFMJDr3Hp01LZAkL1kPW0kRsUNG1rWCcdU=",
+      "uri": "https://arweave.net/KsaW2Lp37vVCB8VpQJgIpCr3hZbHYRnvjKUtKWPyttg"
+    }
+  }
+}

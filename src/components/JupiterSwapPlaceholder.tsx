@@ -4,10 +4,10 @@
  * Currently opens Jupiter in a new tab. In the future, this will embed
  * the Jupiter Terminal widget for in-app swaps.
  *
- * TODO: Jupiter Terminal integration
- * 1. Add script tag: <script src="https://terminal.jup.ag/main-v2.js" />
- * 2. Call window.Jupiter.init({ ... }) with config
- * 3. Replace placeholder with embedded terminal
+ * Jupiter Terminal v3 integration (uses api.jup.ag endpoints)
+ * 1. Script tag: <script src="https://terminal.jup.ag/main-v3.js" />
+ * 2. Calls window.Jupiter.init({ ... }) with config
+ * 3. Embeds terminal in modal overlay
  */
 
 import { useState } from 'react';

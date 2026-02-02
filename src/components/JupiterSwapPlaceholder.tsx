@@ -1,13 +1,11 @@
 /**
- * JupiterSwapPlaceholder — Placeholder for Jupiter Terminal integration
+ * JupiterSwapPlaceholder — Jupiter Plugin integration
  *
- * Currently opens Jupiter in a new tab. In the future, this will embed
- * the Jupiter Terminal widget for in-app swaps.
- *
- * Jupiter Terminal v3 integration (uses api.jup.ag endpoints)
- * 1. Script tag: <script src="https://terminal.jup.ag/main-v3.js" />
+ * Jupiter Plugin (replacement for deprecated Terminal)
+ * 1. Script tag: <script src="https://plugin.jup.ag/plugin-v1.js" />
  * 2. Calls window.Jupiter.init({ ... }) with config
- * 3. Embeds terminal in modal overlay
+ * 3. Embeds plugin in modal overlay
+ * 4. Uses Ultra mode (RPC-less, handles everything server-side)
  */
 
 import { useState } from 'react';

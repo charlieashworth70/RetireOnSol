@@ -9,14 +9,16 @@ declare global {
 export function JupiterTerminal({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     // Check if script already exists
-    if (document.querySelector('script[src="https://terminal.jup.ag/main-v3.js"]')) {
+    if (document.querySelector('script[src="https://plugin.jup.ag/plugin-v1.js"]')) {
       initJupiter();
       return;
     }
 
-    // Load Jupiter script (v3 - latest, uses api.jup.ag endpoints)
+    // Load Jupiter Plugin (replacement for deprecated Terminal)
     const script = document.createElement('script');
-    script.src = 'https://terminal.jup.ag/main-v3.js';
+    script.src = 'https://plugin.jup.ag/plugin-v1.js';
+    script.setAttribute('data-preload', '');
+    script.defer = true;
     script.onload = () => initJupiter();
     document.head.appendChild(script);
 

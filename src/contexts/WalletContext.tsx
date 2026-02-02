@@ -33,13 +33,9 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
   const endpoint = useMemo(() => 'https://solana-mainnet.phantom.app/YBPpkkN4g91xDiAnTE9r0RcMkjg0sKUIWvAfoFVJ', []);
 
   const wallets = useMemo(() => {
-    // Standard adapters for browser/in-app browser support
-    const standards = [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-    ];
-
-    // On Android, add MWA adapter for native app support
+    // On Android, use MWA adapter for native app support
+    // We remove explicit standard adapters (Phantom/Solflare) here to allow
+    // the Wallet Standard protocol to auto-detect them without conflict.
     if (isMobileAndroid()) {
       return [
         new SolanaMobileWalletAdapter({
@@ -47,17 +43,17 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
           appIdentity: {
             name: 'RetireOnSol',
             uri: 'https://charlieashworth70.github.io/RetireOnSol/',
-            icon: 'icons/icon.svg',
+            icon: 'https://charlieashworth70.github.io/RetireOnSol/icons/icon.svg',
           },
           authorizationResultCache: createDefaultAuthorizationResultCache(),
           cluster: 'mainnet-beta',
           onWalletNotFound: createDefaultWalletNotFoundHandler(),
         }),
-        ...standards,
       ];
     }
     
-    return standards;
+    // On desktop/iOS, returning empty array allows Wallet Standard to auto-detect
+    return [];
   }, []);
 
   return (

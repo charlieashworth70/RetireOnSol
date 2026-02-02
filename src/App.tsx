@@ -299,7 +299,7 @@ function App() {
   // Wallet integration for "Import from Wallet"
   const { connected } = useWallet();
   const { setVisible: setWalletModalVisible } = useWalletModal();
-  const { balance: walletBalance, jitoSolBalance: walletJitoSolBalance, loading: walletLoading } = useWalletBalance();
+  const { balance: walletBalance, jitoSolBalance: walletJitoSolBalance, loading: walletLoading, error: walletError } = useWalletBalance();
   const [walletImported, setWalletImported] = useState(false);
   const walletImportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track if we're waiting for wallet connection to import
@@ -307,15 +307,20 @@ function App() {
 
   // When wallet connects and we have a pending import, do the import
   useEffect(() => {
-    if (pendingImport && connected && !walletLoading && walletBalance !== null) {
-      setCurrentSOL(walletBalance);
-      setCurrentJitoSOL(walletJitoSolBalance ?? 0);
-      setPendingImport(false);
-      setWalletImported(true);
-      if (walletImportTimerRef.current) clearTimeout(walletImportTimerRef.current);
-      walletImportTimerRef.current = setTimeout(() => setWalletImported(false), 3000);
+    if (pendingImport && connected && !walletLoading) {
+      if (walletBalance !== null) {
+        setCurrentSOL(walletBalance);
+        setCurrentJitoSOL(walletJitoSolBalance ?? 0);
+        setPendingImport(false);
+        setWalletImported(true);
+        if (walletImportTimerRef.current) clearTimeout(walletImportTimerRef.current);
+        walletImportTimerRef.current = setTimeout(() => setWalletImported(false), 3000);
+      } else if (walletError) {
+        setPendingImport(false);
+        alert(`Failed to import wallet balance: ${walletError}`);
+      }
     }
-  }, [pendingImport, connected, walletLoading, walletBalance, walletJitoSolBalance]);
+  }, [pendingImport, connected, walletLoading, walletBalance, walletJitoSolBalance, walletError]);
 
   // Import from wallet handler
   const importFromWallet = useCallback(() => {
@@ -336,12 +341,14 @@ function App() {
       setWalletImported(true);
       if (walletImportTimerRef.current) clearTimeout(walletImportTimerRef.current);
       walletImportTimerRef.current = setTimeout(() => setWalletImported(false), 3000);
+    } else if (connected && walletError) {
+      alert(`Could not fetch wallet balance: ${walletError}`);
     } else {
-      // Not connected — open modal and set pending
+      // Not connected or loading — open modal and set pending
       setPendingImport(true);
       setWalletModalVisible(true);
     }
-  }, [connected, walletBalance, walletJitoSolBalance, setWalletModalVisible]);
+  }, [connected, walletBalance, walletJitoSolBalance, setWalletModalVisible, walletError, demo.enabled, demo.solBalance, demo.jitoSolBalance]);
 
   // Effective model params with dynamic ceiling for scurve
   const effectiveModelParams = useMemo(() => ({

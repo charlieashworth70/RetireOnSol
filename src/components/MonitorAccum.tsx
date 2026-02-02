@@ -160,6 +160,15 @@ export function MonitorAccum({
         )}
       </div>
 
+      {/* ── Quick Swap ── */}
+      <div className="monitor-accum-section">
+        <h3>⚡ Quick Swap</h3>
+        <JupiterSwapPlaceholder 
+          fromToken="SOL" 
+          toToken="JitoSOL" 
+        />
+      </div>
+
       {/* ── DCA Schedule ── */}
       <div className="monitor-accum-section">
         <h3>📅 DCA Schedule</h3>
@@ -242,6 +251,15 @@ export function MonitorAccum({
         )}
       </div>
 
+      {/* ── Quick Swap ── */}
+      <div className="monitor-accum-section">
+        <h3>⚡ Quick Swap</h3>
+        <JupiterSwapPlaceholder 
+          fromToken="SOL" 
+          toToken="JitoSOL" 
+        />
+      </div>
+
       {/* ── Progress Tracker ── */}
       <div className="monitor-accum-section">
         <h3>📈 Progress</h3>
@@ -282,15 +300,6 @@ export function MonitorAccum({
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── Quick Swap ── */}
-      <div className="monitor-accum-section">
-        <h3>⚡ Quick Swap</h3>
-        <JupiterSwapPlaceholder 
-          fromToken="SOL" 
-          toToken="JitoSOL" 
-        />
       </div>
     </div>
   );

@@ -253,6 +253,33 @@ body {
   margin: 0;
 }
 
+.wallet-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-family: monospace;
+  border: 1px solid var(--border-color);
+}
+
+.wallet-dot {
+  width: 5px;
+  height: 5px;
+  background-color: #14F195;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(20, 241, 149, 0.5);
+}
+
 .import-wallet-btn {
   padding: 0.4rem 0.75rem;
   background: transparent;

@@ -297,7 +297,7 @@ function App() {
   }, []);
 
   // Wallet integration for "Import from Wallet"
-  const { connected } = useWallet();
+  const { connected, publicKey } = useWallet();
   const { setVisible: setWalletModalVisible } = useWalletModal();
   const { balance: walletBalance, jitoSolBalance: walletJitoSolBalance, loading: walletLoading, error: walletError } = useWalletBalance();
   const [walletImported, setWalletImported] = useState(false);
@@ -565,14 +565,22 @@ function App() {
         <section className="input-section">
           <div className="holdings-header">
             <h2>Your SOL Holdings</h2>
-            <button
-              type="button"
-              className="import-wallet-btn"
-              onClick={importFromWallet}
-              disabled={walletLoading}
-            >
-              {walletLoading ? '⏳ Loading...' : '🔗 Import from Wallet'}
-            </button>
+            <div className="wallet-controls">
+              {connected && publicKey && !demo.enabled && (
+                <span className="wallet-badge" title={publicKey.toBase58()}>
+                  <span className="wallet-dot"></span>
+                  {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+                </span>
+              )}
+              <button
+                type="button"
+                className="import-wallet-btn"
+                onClick={importFromWallet}
+                disabled={walletLoading}
+              >
+                {walletLoading ? '⏳ Loading...' : (connected && !demo.enabled ? '⬇️ Import Balance' : '🔗 Connect & Import')}
+              </button>
+            </div>
           </div>
           {walletImported && (
             <div className="wallet-imported-notice">

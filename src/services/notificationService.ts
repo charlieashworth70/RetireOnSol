@@ -11,29 +11,54 @@ export interface DCANotification {
 
 class NotificationService {
   private isAvailable = false;
+  private isNative = false;
+  private webNotificationQueue: Map<number, NodeJS.Timeout> = new Map();
 
   async initialize() {
-    // Check if we're on a native platform
-    if (!Capacitor.isNativePlatform()) {
-      console.log('Notifications only available on native platforms');
-      return false;
-    }
+    this.isNative = Capacitor.isNativePlatform();
 
-    try {
-      // Request permission
-      const permission = await LocalNotifications.requestPermissions();
-      this.isAvailable = permission.display === 'granted';
-      
-      if (this.isAvailable) {
-        console.log('Notification permissions granted');
-      } else {
-        console.log('Notification permissions denied');
+    if (this.isNative) {
+      // Native platform: use Capacitor LocalNotifications
+      try {
+        const permission = await LocalNotifications.requestPermissions();
+        this.isAvailable = permission.display === 'granted';
+        
+        if (this.isAvailable) {
+          console.log('Native notification permissions granted');
+        } else {
+          console.log('Native notification permissions denied');
+        }
+        
+        return this.isAvailable;
+      } catch (error) {
+        console.error('Error initializing native notifications:', error);
+        return false;
       }
-      
-      return this.isAvailable;
-    } catch (error) {
-      console.error('Error initializing notifications:', error);
-      return false;
+    } else {
+      // Web platform: use browser Notification API
+      if (!('Notification' in window)) {
+        console.log('Browser does not support notifications');
+        return false;
+      }
+
+      if (Notification.permission === 'granted') {
+        this.isAvailable = true;
+        console.log('Web notification permissions already granted');
+        return true;
+      } else if (Notification.permission !== 'denied') {
+        try {
+          const permission = await Notification.requestPermission();
+          this.isAvailable = permission === 'granted';
+          console.log(`Web notification permission: ${permission}`);
+          return this.isAvailable;
+        } catch (error) {
+          console.error('Error requesting web notification permission:', error);
+          return false;
+        }
+      } else {
+        console.log('Web notification permissions denied');
+        return false;
+      }
     }
   }
 
@@ -47,33 +72,52 @@ class NotificationService {
       return null;
     }
 
-    try {
-      const id = Math.floor(Math.random() * 1000000);
-      
-      // Schedule notification for the DCA date
-      const schedule: ScheduleOptions = {
-        notifications: [
-          {
-            id,
-            title: '💰 DCA Reminder',
-            body: `Time to buy $${amount} of SOL (${frequency})`,
-            schedule: {
-              at: dcaDate,
-            },
-            sound: 'default',
-            actionTypeId: 'DCA_ACTION',
-            extra: {
-              type: 'dca',
-              amount,
-              frequency,
-              scheduledFor: dcaDate.toISOString(),
-            },
-          },
-        ],
-      };
+    const id = Math.floor(Math.random() * 1000000);
+    const title = '💰 DCA Reminder';
+    const body = `Time to buy $${amount} of SOL (${frequency})`;
 
-      await LocalNotifications.schedule(schedule);
-      console.log(`Scheduled DCA notification ${id} for ${dcaDate}`);
+    try {
+      if (this.isNative) {
+        // Native: use Capacitor LocalNotifications
+        const schedule: ScheduleOptions = {
+          notifications: [
+            {
+              id,
+              title,
+              body,
+              schedule: {
+                at: dcaDate,
+              },
+              sound: 'default',
+              actionTypeId: 'DCA_ACTION',
+              extra: {
+                type: 'dca',
+                amount,
+                frequency,
+                scheduledFor: dcaDate.toISOString(),
+              },
+            },
+          ],
+        };
+
+        await LocalNotifications.schedule(schedule);
+        console.log(`Scheduled native DCA notification ${id} for ${dcaDate}`);
+      } else {
+        // Web: schedule with setTimeout
+        const delay = dcaDate.getTime() - Date.now();
+        if (delay > 0) {
+          const timeout = setTimeout(() => {
+            new Notification(title, { body, icon: '/icon-192.png' });
+            this.webNotificationQueue.delete(id);
+          }, delay);
+          this.webNotificationQueue.set(id, timeout);
+          console.log(`Scheduled web DCA notification ${id} for ${dcaDate}`);
+        } else {
+          console.log('Cannot schedule notification in the past');
+          return null;
+        }
+      }
+      
       return id;
     } catch (error) {
       console.error('Error scheduling notification:', error);
@@ -87,32 +131,41 @@ class NotificationService {
   ): Promise<number | null> {
     if (!this.isAvailable) return null;
 
-    try {
-      const id = Math.floor(Math.random() * 1000000);
-      
-      // Immediate notification for missed DCA
-      const schedule: ScheduleOptions = {
-        notifications: [
-          {
-            id,
-            title: '⚠️ Missed DCA',
-            body: `You missed your $${amount} SOL purchase ${daysMissed} day${daysMissed > 1 ? 's' : ''} ago`,
-            schedule: {
-              at: new Date(Date.now() + 1000), // 1 second from now
-            },
-            sound: 'default',
-            actionTypeId: 'MISSED_DCA_ACTION',
-            extra: {
-              type: 'missed-dca',
-              amount,
-              daysMissed,
-            },
-          },
-        ],
-      };
+    const id = Math.floor(Math.random() * 1000000);
+    const title = '⚠️ Missed DCA';
+    const body = `You missed your $${amount} SOL purchase ${daysMissed} day${daysMissed > 1 ? 's' : ''} ago`;
 
-      await LocalNotifications.schedule(schedule);
-      console.log(`Scheduled missed DCA notification ${id}`);
+    try {
+      if (this.isNative) {
+        // Native: immediate notification via LocalNotifications
+        const schedule: ScheduleOptions = {
+          notifications: [
+            {
+              id,
+              title,
+              body,
+              schedule: {
+                at: new Date(Date.now() + 1000), // 1 second from now
+              },
+              sound: 'default',
+              actionTypeId: 'MISSED_DCA_ACTION',
+              extra: {
+                type: 'missed-dca',
+                amount,
+                daysMissed,
+              },
+            },
+          ],
+        };
+
+        await LocalNotifications.schedule(schedule);
+        console.log(`Scheduled native missed DCA notification ${id}`);
+      } else {
+        // Web: show immediately
+        new Notification(title, { body, icon: '/icon-192.png' });
+        console.log(`Showed web missed DCA notification ${id}`);
+      }
+      
       return id;
     } catch (error) {
       console.error('Error scheduling missed DCA notification:', error);
@@ -124,8 +177,18 @@ class NotificationService {
     if (!this.isAvailable) return;
 
     try {
-      await LocalNotifications.cancel({ notifications: [{ id }] });
-      console.log(`Cancelled notification ${id}`);
+      if (this.isNative) {
+        await LocalNotifications.cancel({ notifications: [{ id }] });
+        console.log(`Cancelled native notification ${id}`);
+      } else {
+        // Web: clear timeout if exists
+        const timeout = this.webNotificationQueue.get(id);
+        if (timeout) {
+          clearTimeout(timeout);
+          this.webNotificationQueue.delete(id);
+          console.log(`Cancelled web notification ${id}`);
+        }
+      }
     } catch (error) {
       console.error('Error cancelling notification:', error);
     }
@@ -135,8 +198,15 @@ class NotificationService {
     if (!this.isAvailable) return;
 
     try {
-      await LocalNotifications.cancel({ notifications: [] }); // Empty array cancels all
-      console.log('Cancelled all notifications');
+      if (this.isNative) {
+        await LocalNotifications.cancel({ notifications: [] }); // Empty array cancels all
+        console.log('Cancelled all native notifications');
+      } else {
+        // Web: clear all timeouts
+        this.webNotificationQueue.forEach((timeout) => clearTimeout(timeout));
+        this.webNotificationQueue.clear();
+        console.log('Cancelled all web notifications');
+      }
     } catch (error) {
       console.error('Error cancelling all notifications:', error);
     }
@@ -146,8 +216,17 @@ class NotificationService {
     if (!this.isAvailable) return [];
 
     try {
-      const pending = await LocalNotifications.getPending();
-      return pending.notifications;
+      if (this.isNative) {
+        const pending = await LocalNotifications.getPending();
+        return pending.notifications;
+      } else {
+        // Web: return scheduled notifications from queue
+        return Array.from(this.webNotificationQueue.keys()).map(id => ({
+          id,
+          title: 'Scheduled notification',
+          body: '',
+        }));
+      }
     } catch (error) {
       console.error('Error getting pending notifications:', error);
       return [];
@@ -162,23 +241,34 @@ class NotificationService {
       if (!this.isAvailable) return;
     }
 
-    try {
-      const schedule: ScheduleOptions = {
-        notifications: [
-          {
-            id: 999999,
-            title: '🧪 Test Notification',
-            body: 'RetireOnSol notifications are working!',
-            schedule: {
-              at: new Date(Date.now() + 2000), // 2 seconds from now
-            },
-            sound: 'default',
-          },
-        ],
-      };
+    const title = '🧪 Test Notification';
+    const body = 'RetireOnSol notifications are working!';
 
-      await LocalNotifications.schedule(schedule);
-      console.log('Test notification scheduled');
+    try {
+      if (this.isNative) {
+        const schedule: ScheduleOptions = {
+          notifications: [
+            {
+              id: 999999,
+              title,
+              body,
+              schedule: {
+                at: new Date(Date.now() + 2000), // 2 seconds from now
+              },
+              sound: 'default',
+            },
+          ],
+        };
+
+        await LocalNotifications.schedule(schedule);
+        console.log('Native test notification scheduled');
+      } else {
+        // Web: show after 2 seconds
+        setTimeout(() => {
+          new Notification(title, { body, icon: '/icon-192.png' });
+        }, 2000);
+        console.log('Web test notification scheduled');
+      }
     } catch (error) {
       console.error('Error sending test notification:', error);
     }

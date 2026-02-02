@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDemoMode } from '../contexts/DemoContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 export function DemoPanel() {
   const { 
@@ -15,6 +16,7 @@ export function DemoPanel() {
     setEnabled 
   } = useDemoMode();
   const [collapsed, setCollapsed] = useState(false);
+  const { isNative, isAvailable, sendTestNotification } = useNotifications();
 
   if (!enabled) return null;
 
@@ -206,6 +208,38 @@ export function DemoPanel() {
               </button>
             </div>
           </div>
+
+          {/* Notification Test (only on native) */}
+          {isNative && (
+            <button
+              type="button"
+              onClick={sendTestNotification}
+              disabled={!isAvailable}
+              style={{
+                padding: '8px 16px',
+                background: isAvailable ? 'rgba(20, 241, 149, 0.1)' : 'rgba(100, 100, 100, 0.1)',
+                border: isAvailable ? '1px solid #14F195' : '1px solid #666',
+                borderRadius: '8px',
+                color: isAvailable ? '#14F195' : '#666',
+                cursor: isAvailable ? 'pointer' : 'not-allowed',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => {
+                if (isAvailable) {
+                  e.currentTarget.style.background = 'rgba(20, 241, 149, 0.2)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (isAvailable) {
+                  e.currentTarget.style.background = 'rgba(20, 241, 149, 0.1)';
+                }
+              }}
+            >
+              🔔 Test Notification
+            </button>
+          )}
 
           {/* Exit Button */}
           <button

@@ -1,11 +1,10 @@
-import { useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, Connection, PublicKey } from '@solana/web3.js';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { useState, useEffect, useCallback } from 'react';
 import { useDemoMode } from '../contexts/DemoContext';
 
 const JITOSOL_MINT = new PublicKey('J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn');
-const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com';
 
 export interface WalletBalanceResult {
   balance: number | null;
@@ -15,58 +14,9 @@ export interface WalletBalanceResult {
   refetch: () => Promise<void>;
 }
 
-// Extend window for Phantom
-declare global {
-  interface Window {
-    solana?: {
-      isPhantom?: boolean;
-      request: (args: { method: string; params?: unknown }) => Promise<unknown>;
-    };
-    solflare?: {
-      isSolflare?: boolean;
-      request: (args: { method: string; params?: unknown }) => Promise<unknown>;
-    };
-  }
-}
-
-async function getBalanceFromPhantom(publicKeyStr: string): Promise<number> {
-  if (window.solana?.isPhantom) {
-    try {
-      const result = await window.solana.request({
-        method: 'getBalance',
-        params: { publicKey: publicKeyStr },
-      });
-      if (typeof result === 'number') {
-        return result / LAMPORTS_PER_SOL;
-      }
-    } catch {
-      // Fall through to alternative method
-    }
-  }
-  throw new Error('Phantom balance request not available');
-}
-
-async function getBalanceFromDirectRPC(publicKeyStr: string): Promise<number> {
-  const connection = new Connection(RPC_ENDPOINT, 'confirmed');
-  const pubkey = new PublicKey(publicKeyStr);
-  const balance = await connection.getBalance(pubkey);
-  return balance / LAMPORTS_PER_SOL;
-}
-
-async function getJitoSolBalance(publicKey: PublicKey): Promise<number> {
-  const connection = new Connection(RPC_ENDPOINT, 'confirmed');
-  try {
-    const ata = await getAssociatedTokenAddress(JITOSOL_MINT, publicKey);
-    const accountInfo = await connection.getTokenAccountBalance(ata);
-    return Number(accountInfo.value.uiAmount ?? 0);
-  } catch {
-    // Account doesn't exist = 0 balance
-    return 0;
-  }
-}
-
 export function useWalletBalance(): WalletBalanceResult {
   const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
   const demo = useDemoMode();
   const [balance, setBalance] = useState<number | null>(null);
   const [jitoSolBalance, setJitoSolBalance] = useState<number | null>(null);
@@ -81,22 +31,24 @@ export function useWalletBalance(): WalletBalanceResult {
       return;
     }
 
-    const pubKeyStr = publicKey.toBase58();
-
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch SOL balance
-      let sol: number;
-      try {
-        sol = await getBalanceFromPhantom(pubKeyStr);
-      } catch {
-        sol = await getBalanceFromDirectRPC(pubKeyStr);
-      }
+      // Fetch SOL balance using shared connection
+      const lamports = await connection.getBalance(publicKey);
+      const sol = lamports / LAMPORTS_PER_SOL;
 
       // Fetch JitoSOL balance
-      const jito = await getJitoSolBalance(publicKey);
+      let jito = 0;
+      try {
+        const ata = await getAssociatedTokenAddress(JITOSOL_MINT, publicKey);
+        const accountInfo = await connection.getTokenAccountBalance(ata);
+        jito = Number(accountInfo.value.uiAmount ?? 0);
+      } catch {
+        // Account doesn't exist = 0 balance
+        jito = 0;
+      }
 
       setBalance(Math.round(sol * 100) / 100);
       setJitoSolBalance(Math.round(jito * 100) / 100);
@@ -108,7 +60,7 @@ export function useWalletBalance(): WalletBalanceResult {
     } finally {
       setLoading(false);
     }
-  }, [publicKey, connected, demo.enabled]);
+  }, [publicKey, connected, demo.enabled, connection]);
 
   useEffect(() => {
     if (demo.enabled) return;

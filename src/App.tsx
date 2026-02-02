@@ -114,7 +114,14 @@ function App() {
   // Reset key - incremented when Reset All Settings is clicked to trigger SpendTab reset
   const [resetKey, setResetKey] = useState(0);
 
+  // Scroll to top on tab change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [mainTab, planTab, monitorTab]);
+
   // Demo Mode: Check for due notifications when time advances
+  const lastNotifiedRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (demo.enabled && activePlan && demo.demoDate) {
       const schedule = calculateDCASchedule(
@@ -127,12 +134,17 @@ function App() {
       const latestDueDate = schedule.allDueDates[schedule.allDueDates.length - 1];
       
       // Notify if we have a due date that hasn't been marked complete
-      if (latestDueDate && !demo.completedDCAs.has(latestDueDate.toISOString())) {
-        // Fire notification
-        notificationService.scheduleMissedDCAReminder(
-          activePlan.settings.dcaAmountUSD,
-          Math.max(0, Math.floor((demo.demoDate.getTime() - latestDueDate.getTime()) / (1000 * 60 * 60 * 24)))
-        );
+      // And we haven't already notified for this specific date in this session
+      if (latestDueDate) {
+        const dateIso = latestDueDate.toISOString();
+        if (dateIso !== lastNotifiedRef.current && !demo.completedDCAs.has(dateIso)) {
+          // Fire notification
+          notificationService.scheduleMissedDCAReminder(
+            activePlan.settings.dcaAmountUSD,
+            Math.max(0, Math.floor((demo.demoDate.getTime() - latestDueDate.getTime()) / (1000 * 60 * 60 * 24)))
+          );
+          lastNotifiedRef.current = dateIso;
+        }
       }
     }
   }, [demo.demoDate, demo.enabled, activePlan, demo.completedDCAs]);

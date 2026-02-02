@@ -132,16 +132,15 @@ class NotificationService {
     if (!this.isAvailable) return null;
 
     const id = Math.floor(Math.random() * 1000000);
-    const title = '⚠️ Missed DCA';
-    const body = `You missed your $${amount} SOL purchase ${daysMissed} day${daysMissed > 1 ? 's' : ''} ago`;
+    const title = '💰 DCA Time';
+    const body = `Time to invest $${amount} into JitoSOL. Tap to swap.`;
 
     try {
       if (this.isNative) {
         // Native: immediate notification via LocalNotifications
         const schedule: ScheduleOptions = {
           notifications: [
-            {
-              id,
+            {\n              id,
               title,
               body,
               schedule: {

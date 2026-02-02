@@ -284,16 +284,14 @@ export function MonitorAccum({
         </div>
       </div>
 
-      {/* ── Quick Actions ── */}
-      {targetJitoSOL > 0 && (
-        <div className="monitor-accum-section">
-          <h3>⚡ Quick Swap</h3>
-          <JupiterSwapPlaceholder 
-            fromToken="SOL" 
-            toToken="JitoSOL" 
-          />
-        </div>
-      )}
+      {/* ── Quick Swap ── */}
+      <div className="monitor-accum-section">
+        <h3>⚡ Quick Swap</h3>
+        <JupiterSwapPlaceholder 
+          fromToken="SOL" 
+          toToken="JitoSOL" 
+        />
+      </div>
     </div>
   );
 }

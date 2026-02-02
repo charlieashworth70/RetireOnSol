@@ -1354,7 +1354,21 @@ function App() {
                     </div>
 
                     <div className="monitor-wallet-connect">
-                      <WalletMultiButton />
+                      {demo.enabled ? (
+                        <div style={{
+                          padding: '10px 20px',
+                          background: 'rgba(20, 241, 149, 0.1)',
+                          border: '1px solid #14F195',
+                          borderRadius: '8px',
+                          color: '#14F195',
+                          fontWeight: 'bold',
+                          textAlign: 'center',
+                        }}>
+                          ✅ Demo Wallet Connected
+                        </div>
+                      ) : (
+                        <WalletMultiButton />
+                      )}
                     </div>
 
                     <MonitorAccum
@@ -1363,6 +1377,9 @@ function App() {
                       walletJitoSOL={walletJitoSolBalance}
                       currentPrice={currentPrice}
                       connected={demo.enabled || connected}
+                      demoDate={demo.enabled ? demo.demoDate : null}
+                      completedDCAs={demo.enabled ? demo.completedDCAs : undefined}
+                      onMarkDCAComplete={demo.enabled ? demo.markDCAComplete : undefined}
                     />
                   </section>
                 )}
@@ -1389,7 +1406,21 @@ function App() {
                     </div>
 
                     <div className="monitor-wallet-connect">
-                      <WalletMultiButton />
+                      {demo.enabled ? (
+                        <div style={{
+                          padding: '10px 20px',
+                          background: 'rgba(20, 241, 149, 0.1)',
+                          border: '1px solid #14F195',
+                          borderRadius: '8px',
+                          color: '#14F195',
+                          fontWeight: 'bold',
+                          textAlign: 'center',
+                        }}>
+                          ✅ Demo Wallet Connected
+                        </div>
+                      ) : (
+                        <WalletMultiButton />
+                      )}
                     </div>
 
                     <MonitorDecum

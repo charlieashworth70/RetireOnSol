@@ -2,10 +2,28 @@ import { useState } from 'react';
 import { useDemoMode } from '../contexts/DemoContext';
 
 export function DemoPanel() {
-  const { enabled, solBalance, jitoSolBalance, setSolBalance, setJitoSolBalance, setEnabled } = useDemoMode();
+  const { 
+    enabled, 
+    solBalance, 
+    jitoSolBalance, 
+    demoDate,
+    completedDCAs,
+    setSolBalance, 
+    setJitoSolBalance, 
+    advanceTime,
+    resetDemoDate,
+    setEnabled 
+  } = useDemoMode();
   const [collapsed, setCollapsed] = useState(false);
 
   if (!enabled) return null;
+
+  const currentDate = demoDate || new Date();
+  const dateStr = currentDate.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
 
   return (
     <div className="demo-panel" style={{
@@ -106,6 +124,87 @@ export function DemoPanel() {
                 fontSize: '12px',
               }}
             />
+          </div>
+
+          {/* Time Controls */}
+          <div>
+            <label style={{ fontSize: '12px', color: '#aaa', display: 'block', marginBottom: '8px' }}>
+              Demo Date: <span style={{ color: '#F5A623', fontWeight: 'bold' }}>{dateStr}</span>
+              {completedDCAs.size > 0 && (
+                <span style={{ fontSize: '10px', color: '#14F195', marginLeft: '8px' }}>
+                  ({completedDCAs.size} DCA{completedDCAs.size > 1 ? 's' : ''} completed)
+                </span>
+              )}
+            </label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => advanceTime(1)}
+                style={{
+                  flex: 1,
+                  padding: '6px 12px',
+                  background: 'rgba(20, 241, 149, 0.1)',
+                  border: '1px solid #14F195',
+                  borderRadius: '6px',
+                  color: '#14F195',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                }}
+              >
+                +1 Day
+              </button>
+              <button
+                type="button"
+                onClick={() => advanceTime(7)}
+                style={{
+                  flex: 1,
+                  padding: '6px 12px',
+                  background: 'rgba(20, 241, 149, 0.1)',
+                  border: '1px solid #14F195',
+                  borderRadius: '6px',
+                  color: '#14F195',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                }}
+              >
+                +1 Week
+              </button>
+              <button
+                type="button"
+                onClick={() => advanceTime(30)}
+                style={{
+                  flex: 1,
+                  padding: '6px 12px',
+                  background: 'rgba(20, 241, 149, 0.1)',
+                  border: '1px solid #14F195',
+                  borderRadius: '6px',
+                  color: '#14F195',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                }}
+              >
+                +1 Month
+              </button>
+              <button
+                type="button"
+                onClick={resetDemoDate}
+                style={{
+                  flex: 1,
+                  padding: '6px 12px',
+                  background: 'transparent',
+                  border: '1px solid #777',
+                  borderRadius: '6px',
+                  color: '#999',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                }}
+              >
+                Reset
+              </button>
+            </div>
           </div>
 
           {/* Exit Button */}

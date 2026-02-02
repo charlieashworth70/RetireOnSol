@@ -23,6 +23,9 @@ export interface MonitorAccumProps {
   walletJitoSOL: number | null;
   currentPrice: number | null;
   connected: boolean;
+  demoDate?: Date | null;
+  completedDCAs?: Set<string>;
+  onMarkDCAComplete?: (isoDate: string) => void;
 }
 
 function ProgressBar({ current, target }: { current: number; target: number }) {
@@ -49,6 +52,9 @@ export function MonitorAccum({
   walletJitoSOL,
   currentPrice,
   connected,
+  demoDate,
+  completedDCAs = new Set(),
+  onMarkDCAComplete,
 }: MonitorAccumProps) {
   const { settings, activatedAt } = activePlan;
   const targetSOL = settings.currentSOL;
@@ -66,12 +72,21 @@ export function MonitorAccum({
   const totalGapSOL = solGap + jitoGap; // JitoSOL ≈ SOL for value purposes
   const gapUSD = currentPrice ? totalGapSOL * currentPrice : null;
 
-  // DCA schedule
+  // DCA schedule (use demo date if provided)
   const dcaSchedule = calculateDCASchedule(
     activatedAt,
     settings.dcaFrequency,
-    settings.dcaAmountUSD
+    settings.dcaAmountUSD,
+    demoDate || undefined
   );
+
+  // Adjust missed count for completed DCAs
+  const actualMissed = dcaSchedule.allDueDates.filter(
+    (date) => !completedDCAs.has(date.toISOString())
+  );
+  const actualMissedCount = actualMissed.length;
+  const actualMissedTotal = actualMissedCount * settings.dcaAmountUSD;
+  const actualCompletedCount = dcaSchedule.totalDueCount - actualMissedCount;
 
   // Progress tracking
   const daysActive = daysSince(activatedAt);
@@ -177,20 +192,51 @@ export function MonitorAccum({
             <span className="dca-label">DCAs due since start:</span>
             <span className="dca-value">{dcaSchedule.totalDueCount}</span>
           </div>
+          {actualCompletedCount > 0 && (
+            <div className="dca-info-row">
+              <span className="dca-label">Completed:</span>
+              <span className="dca-value" style={{ color: '#14F195' }}>
+                {actualCompletedCount} ✅
+              </span>
+            </div>
+          )}
         </div>
 
-        {dcaSchedule.missedCount > 0 && (
+        {actualMissedCount > 0 && (
           <div className="dca-warning">
             <span className="dca-warning-icon">⚠️</span>
             <div className="dca-warning-text">
               <strong>
-                {dcaSchedule.missedCount} DCA payment{dcaSchedule.missedCount > 1 ? 's' : ''} overdue
+                {actualMissedCount} DCA payment{actualMissedCount > 1 ? 's' : ''} overdue
               </strong>{' '}
               ({formatUSD(settings.dcaAmountUSD)} {settings.dcaFrequency})
               <br />
               You&apos;ve missed{' '}
-              <strong>{formatUSD(dcaSchedule.missedTotal)}</strong> in planned
+              <strong>{formatUSD(actualMissedTotal)}</strong> in planned
               purchases
+              {onMarkDCAComplete && actualMissed.length > 0 && (
+                <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {actualMissed.slice(-3).reverse().map((date) => (
+                    <button
+                      key={date.toISOString()}
+                      type="button"
+                      onClick={() => onMarkDCAComplete(date.toISOString())}
+                      style={{
+                        padding: '4px 10px',
+                        background: 'rgba(20, 241, 149, 0.1)',
+                        border: '1px solid #14F195',
+                        borderRadius: '6px',
+                        color: '#14F195',
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Mark {date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} Done
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

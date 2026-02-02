@@ -297,7 +297,7 @@ function App() {
   }, []);
 
   // Wallet integration for "Import from Wallet"
-  const { connected, publicKey } = useWallet();
+  const { connected, publicKey, disconnect } = useWallet();
   const { setVisible: setWalletModalVisible } = useWalletModal();
   const { balance: walletBalance, jitoSolBalance: walletJitoSolBalance, loading: walletLoading, error: walletError } = useWalletBalance();
   const [walletImported, setWalletImported] = useState(false);
@@ -567,10 +567,20 @@ function App() {
             <h2>Your SOL Holdings</h2>
             <div className="wallet-controls">
               {connected && publicKey && !demo.enabled && (
-                <span className="wallet-badge" title={publicKey.toBase58()}>
-                  <span className="wallet-dot"></span>
-                  {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
-                </span>
+                <div className="wallet-badge-group">
+                  <span className="wallet-badge" title={publicKey.toBase58()}>
+                    <span className="wallet-dot"></span>
+                    {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+                  </span>
+                  <button 
+                    type="button" 
+                    className="disconnect-btn"
+                    onClick={() => disconnect()}
+                    title="Disconnect Wallet"
+                  >
+                    ×
+                  </button>
+                </div>
               )}
               <button
                 type="button"

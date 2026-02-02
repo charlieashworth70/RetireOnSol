@@ -4,6 +4,8 @@ import {
   WalletProvider,
 } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
+import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
 import {
   SolanaMobileWalletAdapter,
   createDefaultAddressSelector,
@@ -14,10 +16,15 @@ import {
 // Default styles for the wallet modal
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-// Detect mobile Android (for MWA adapter)
+// Detect mobile platforms
 const isMobileAndroid = () => {
   if (typeof navigator === 'undefined') return false;
   return /android/i.test(navigator.userAgent);
+};
+
+const isMobileIOS = () => {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 };
 
 interface WalletContextProviderProps {
@@ -30,8 +37,6 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
 
   const wallets = useMemo(() => {
     // On Android, use MWA adapter for native app support
-    // We remove explicit standard adapters (Phantom/Solflare) here to allow
-    // the Wallet Standard protocol to auto-detect them without conflict.
     if (isMobileAndroid()) {
       return [
         new SolanaMobileWalletAdapter({
@@ -48,7 +53,16 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
       ];
     }
     
-    // On desktop/iOS, returning empty array allows Wallet Standard to auto-detect
+    // On iOS, use explicit wallet adapters (no MWA support on iOS)
+    // iOS wallets connect via deep links (phantom://, solflare://, etc.)
+    if (isMobileIOS()) {
+      return [
+        new PhantomWalletAdapter(),
+        new SolflareWalletAdapter(),
+      ];
+    }
+    
+    // On desktop, returning empty array allows Wallet Standard to auto-detect
     return [];
   }, []);
 

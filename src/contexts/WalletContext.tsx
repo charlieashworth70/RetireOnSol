@@ -10,10 +10,6 @@ import {
   createDefaultAuthorizationResultCache,
   createDefaultWalletNotFoundHandler,
 } from '@solana-mobile/wallet-adapter-mobile';
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
 
 // Default styles for the wallet modal
 import '@solana/wallet-adapter-react-ui/styles.css';

@@ -8,35 +8,59 @@ declare global {
 
 export function JupiterTerminal({ onClose }: { onClose: () => void }) {
   useEffect(() => {
+    let attempts = 0;
+    const maxAttempts = 20; // Try for ~10 seconds
+
+    function initJupiter() {
+      attempts++;
+      
+      if (window.Jupiter?.init) {
+        console.log('[Jupiter] Initializing plugin...');
+        try {
+          window.Jupiter.init({
+            displayMode: 'integrated',
+            integratedTargetId: 'integrated-terminal',
+            endpoint: 'https://solana-mainnet.phantom.app/YBPpkkN4g91xDiAnTE9r0RcMkjg0sKUIWvAfoFVJ',
+            defaultExplorer: 'SolanaFM',
+            formProps: {
+              fixedOutputMint: true,
+              initialOutputMint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', // JitoSOL
+              initialInputMint: 'So11111111111111111111111111111111111111112', // SOL
+            },
+          });
+          console.log('[Jupiter] Plugin initialized successfully');
+        } catch (err) {
+          console.error('[Jupiter] Init error:', err);
+        }
+      } else if (attempts < maxAttempts) {
+        console.log(`[Jupiter] Not ready yet, attempt ${attempts}/${maxAttempts}. Retrying...`);
+        setTimeout(initJupiter, 500);
+      } else {
+        console.error('[Jupiter] Failed to load after', maxAttempts, 'attempts');
+      }
+    }
+
     // Check if script already exists
-    if (document.querySelector('script[src="https://plugin.jup.ag/plugin-v1.js"]')) {
+    const existingScript = document.querySelector('script[src*="plugin.jup.ag"]');
+    if (existingScript) {
+      console.log('[Jupiter] Script already loaded, initializing...');
       initJupiter();
       return;
     }
 
-    // Load Jupiter Plugin (replacement for deprecated Terminal)
+    // Load Jupiter Plugin script
+    console.log('[Jupiter] Loading plugin script...');
     const script = document.createElement('script');
     script.src = 'https://plugin.jup.ag/plugin-v1.js';
-    script.setAttribute('data-preload', '');
     script.defer = true;
-    script.onload = () => initJupiter();
+    script.onload = () => {
+      console.log('[Jupiter] Script loaded, waiting for window.Jupiter...');
+      setTimeout(initJupiter, 100); // Give it a moment to attach to window
+    };
+    script.onerror = () => {
+      console.error('[Jupiter] Failed to load script from plugin.jup.ag');
+    };
     document.head.appendChild(script);
-
-    function initJupiter() {
-      if (window.Jupiter) {
-        window.Jupiter.init({
-          displayMode: 'integrated',
-          integratedTargetId: 'integrated-terminal',
-          endpoint: 'https://solana-mainnet.phantom.app/YBPpkkN4g91xDiAnTE9r0RcMkjg0sKUIWvAfoFVJ',
-          defaultExplorer: 'SolanaFM',
-          formProps: {
-            fixedOutputMint: true,
-            initialOutputMint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', // JitoSOL
-            initialInputMint: 'So11111111111111111111111111111111111111112', // SOL
-          },
-        });
-      }
-    }
   }, []);
 
   return (

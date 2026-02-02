@@ -140,7 +140,8 @@ class NotificationService {
         // Native: immediate notification via LocalNotifications
         const schedule: ScheduleOptions = {
           notifications: [
-            {\n              id,
+            {
+              id,
               title,
               body,
               schedule: {

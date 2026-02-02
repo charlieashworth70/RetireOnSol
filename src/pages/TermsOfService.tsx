@@ -5,7 +5,7 @@ export function TermsOfService() {
     <div className="legal-page">
       <header className="legal-header">
         <a href="/" className="back-link">&larr; Back to App</a>
-        <img src="/icons/icon.svg" alt="RetireOnSol" className="legal-logo" />
+        <img src="icons/icon.svg" alt="RetireOnSol" className="legal-logo" />
         <h1>Terms of Service</h1>
         <p className="last-updated">Last updated: January 27, 2025</p>
       </header>

@@ -447,7 +447,7 @@ function App() {
         <div className="header-top">
           <div className="header-brand">
             <img
-              src="/icons/icon.svg"
+              src="icons/icon.svg"
               alt="RetireOnSol"
               className="header-logo"
               onClick={demo.handleLogoClick}
@@ -1640,7 +1640,7 @@ function App() {
 
       <footer className="footer">
         <div className="footer-brand">
-          <img src="/icons/icon.svg" alt="RetireOnSol" className="footer-logo" />
+          <img src="icons/icon.svg" alt="RetireOnSol" className="footer-logo" />
           <span className="footer-name">RetireOnSol</span>
         </div>
         <div className="footer-links">

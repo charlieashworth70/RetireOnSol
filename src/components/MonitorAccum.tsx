@@ -154,13 +154,6 @@ export function MonitorAccum({
                     <strong>{formatUSD(gapUSD)}</strong> at current prices
                   </p>
                 )}
-
-                {/* Jupiter Swap CTA */}
-                {!jitoFunded && targetJitoSOL > 0 && (
-                  <div className="funding-actions">
-                    <JupiterSwapPlaceholder />
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -214,16 +207,6 @@ export function MonitorAccum({
               You&apos;ve missed{' '}
               <strong>{formatUSD(actualMissedTotal)}</strong> in planned
               purchases.
-              
-              {/* Show Jupiter Swap if we are behind on JitoSOL balance */}
-              {connected && (
-                <div style={{ marginTop: '12px' }}>
-                  <JupiterSwapPlaceholder 
-                    fromToken="SOL" 
-                    toToken="JitoSOL" 
-                  />
-                </div>
-              )}
 
               {onMarkDCAComplete && actualMissed.length > 0 && (
                 <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -300,6 +283,16 @@ export function MonitorAccum({
           )}
         </div>
       </div>
+
+      {/* ── Quick Actions ── */}
+      {connected && !jitoFunded && targetJitoSOL > 0 && (
+        <div className="monitor-accum-section">
+          <JupiterSwapPlaceholder 
+            fromToken="SOL" 
+            toToken="JitoSOL" 
+          />
+        </div>
+      )}
     </div>
   );
 }

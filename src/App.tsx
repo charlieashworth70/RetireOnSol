@@ -267,6 +267,7 @@ function App() {
     const plan: ActivePlan = {
       activatedAt: new Date().toISOString(),
       settings: currentSettings,
+      startPhase: spendNowMode ? 'decum' : 'accum',
     };
     saveActivePlan(plan);
     setActivePlan(plan);
@@ -516,6 +517,29 @@ function App() {
       )}
 
       <main className="main">
+        {activePlan && mainTab === 'plan' && (
+          <div style={{
+            background: 'rgba(245, 166, 35, 0.1)',
+            border: '1px solid rgba(245, 166, 35, 0.3)',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '16px',
+            fontSize: '0.9rem',
+            color: '#F5A623',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>📝</span>
+            <div>
+              <strong>Editing Mode</strong>
+              <div style={{ fontSize: '0.8rem', opacity: 0.9 }}>
+                You have an active plan running. Changes made here won't affect your tracked plan unless you click <strong>Execute Plan</strong> again.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* GROW TAB */}
         {mainTab === 'plan' && planTab === 'grow' && (
           <>
@@ -1483,6 +1507,7 @@ function App() {
                       walletJitoSOL={walletJitoSolBalance}
                       currentPrice={currentPrice}
                       connected={demo.enabled || connected}
+                      demoDate={demo.enabled ? demo.demoDate : null}
                     />
                   </section>
                 )}
@@ -1503,6 +1528,7 @@ function App() {
                     currentPrice={currentPrice}
                     onConfirm={cancelExecution}
                     onClose={() => setShowCancelModal(false)}
+                    demoDate={demo.enabled ? demo.demoDate : null}
                   />
                 )}
               </>

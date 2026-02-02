@@ -7,13 +7,14 @@ interface CancelPlanModalProps {
   currentPrice: number | null;
   onConfirm: () => void;
   onClose: () => void;
+  demoDate?: Date | null;
 }
 
-export function CancelPlanModal({ activePlan, currentPrice, onConfirm, onClose }: CancelPlanModalProps) {
+export function CancelPlanModal({ activePlan, currentPrice, onConfirm, onClose, demoDate }: CancelPlanModalProps) {
   const [confirmText, setConfirmText] = useState('');
 
   const activatedDate = new Date(activePlan.activatedAt);
-  const now = new Date();
+  const now = demoDate || new Date();
   const elapsedMs = now.getTime() - activatedDate.getTime();
   const elapsedDays = Math.max(0, Math.floor(elapsedMs / (1000 * 60 * 60 * 24)));
   const elapsedMonths = Math.floor(elapsedDays / 30.44);

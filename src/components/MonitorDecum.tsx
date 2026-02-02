@@ -18,6 +18,7 @@ export interface MonitorDecumProps {
   walletJitoSOL: number | null;
   currentPrice: number | null;
   connected: boolean;
+  demoDate?: Date | null;
 }
 
 interface WithdrawalScheduleResult {
@@ -33,13 +34,29 @@ function calculateWithdrawalSchedule(
   monthlyIncome: number,
   _retirementYears: number,
   startingValueUSD: number,
-  now?: Date
-): WithdrawalScheduleResult {
+  now?: Date,
+  startPhase?: 'accum' | 'decum',
+  accumYears?: number
+): WithdrawalScheduleResult | null {
   const currentDate = now ?? new Date();
   const activationDate = new Date(activatedAt);
+  
+  // Determine effective start date for withdrawals
+  let startDate = activationDate;
+  
+  if (startPhase === 'accum') {
+    // If in accumulation phase, decumulation starts after accumulation years
+    const decumStartDate = new Date(activationDate);
+    decumStartDate.setFullYear(decumStartDate.getFullYear() + (accumYears || 0));
+    
+    if (currentDate < decumStartDate) {
+      return null; // Not in decumulation phase yet
+    }
+    startDate = decumStartDate;
+  }
 
-  // Calculate months elapsed
-  const diffMs = currentDate.getTime() - activationDate.getTime();
+  // Calculate months elapsed since decumulation start
+  const diffMs = currentDate.getTime() - startDate.getTime();
   const monthsElapsed = Math.max(
     0,
     Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44))
@@ -51,8 +68,8 @@ function calculateWithdrawalSchedule(
   // Simple expected remaining (doesn't account for growth — conservative)
   const expectedRemainingUSD = Math.max(0, startingValueUSD - totalWithdrawnUSD);
 
-  // Next withdrawal: activation date + (monthsElapsed + 1) months
-  const nextWithdrawalDate = new Date(activationDate);
+  // Next withdrawal: start date + (monthsElapsed + 1) months
+  const nextWithdrawalDate = new Date(startDate);
   nextWithdrawalDate.setMonth(
     nextWithdrawalDate.getMonth() + monthsElapsed + 1
   );
@@ -72,6 +89,7 @@ export function MonitorDecum({
   walletJitoSOL,
   currentPrice,
   connected,
+  demoDate,
 }: MonitorDecumProps) {
   const { settings, activatedAt } = activePlan;
   const monthlyIncome = settings.spendMonthlyIncome;
@@ -90,10 +108,36 @@ export function MonitorDecum({
     activatedAt,
     monthlyIncome,
     retirementYears,
-    startingValueUSD
+    startingValueUSD,
+    demoDate || undefined,
+    activePlan.startPhase,
+    settings.years
   );
 
-  const daysActive = daysSince(activatedAt);
+  if (!schedule) {
+    const accumEndDate = new Date(activatedAt);
+    accumEndDate.setFullYear(accumEndDate.getFullYear() + settings.years);
+    
+    return (
+      <div className="monitor-decum">
+        <div className="monitor-decum-section">
+          <h3>⏳ Accumulation Phase Active</h3>
+          <p style={{ textAlign: 'center', color: '#888', margin: '20px 0' }}>
+            Decumulation is scheduled to start on<br />
+            <strong style={{ color: '#F5A623', fontSize: '1.1rem' }}>
+              {accumEndDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </strong>
+          </p>
+          <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px', textAlign: 'center' }}>
+            <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem' }}>Projected Starting Balance</p>
+            <strong style={{ fontSize: '1.2rem', color: '#14F195' }}>{formatUSD(startingValueUSD)}</strong>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const daysActive = daysSince(activatedAt, demoDate || undefined); // Note: this is days since plan activation, not decum start
   const totalRetirementMonths = retirementYears * 12;
   const monthsRemaining = Math.max(
     0,

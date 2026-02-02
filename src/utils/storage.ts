@@ -126,6 +126,7 @@ const ACTIVE_PLAN_KEY = 'retireonsol_active_plan';
 export interface ActivePlan {
   activatedAt: string; // ISO date
   settings: StoredSettings; // snapshot of all settings at time of execution
+  startPhase?: 'accum' | 'decum'; // which phase the plan started in
 }
 
 /**

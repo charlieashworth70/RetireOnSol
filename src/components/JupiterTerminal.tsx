@@ -17,6 +17,13 @@ export function JupiterTerminal({ onClose }: { onClose: () => void }) {
       if (window.Jupiter?.init) {
         console.log('[Jupiter] Initializing plugin...');
         try {
+          // Clear the container first (Jupiter Plugin expects an empty div)
+          const container = document.getElementById('integrated-terminal');
+          if (container) {
+            container.innerHTML = '';
+            console.log('[Jupiter] Cleared container');
+          }
+          
           window.Jupiter.init({
             displayMode: 'integrated',
             integratedTargetId: 'integrated-terminal',

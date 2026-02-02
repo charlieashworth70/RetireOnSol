@@ -107,7 +107,7 @@ class NotificationService {
         const delay = dcaDate.getTime() - Date.now();
         if (delay > 0) {
           const timeout = setTimeout(() => {
-            new Notification(title, { body, icon: '/icon-192.png' });
+            new Notification(title, { body, icon: 'icons/icon-192.png' });
             this.webNotificationQueue.delete(id);
           }, delay);
           this.webNotificationQueue.set(id, timeout);
@@ -162,7 +162,7 @@ class NotificationService {
         console.log(`Scheduled native missed DCA notification ${id}`);
       } else {
         // Web: show immediately
-        new Notification(title, { body, icon: '/icon-192.png' });
+        new Notification(title, { body, icon: 'icons/icon-192.png' });
         console.log(`Showed web missed DCA notification ${id}`);
       }
       
@@ -265,7 +265,7 @@ class NotificationService {
       } else {
         // Web: show after 2 seconds
         setTimeout(() => {
-          new Notification(title, { body, icon: '/icon-192.png' });
+          new Notification(title, { body, icon: 'icons/icon-192.png' });
         }, 2000);
         console.log('Web test notification scheduled');
       }

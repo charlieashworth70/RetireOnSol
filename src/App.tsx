@@ -607,7 +607,7 @@ function App() {
                   type="number"
                   min="0"
                   step="1"
-                  value={currentSOL || ''}
+                  value={currentSOL}
                   onChange={(e) => setCurrentSOL(e.target.value === '' ? 0 : Number(e.target.value))}
                 />
               </div>
@@ -621,7 +621,7 @@ function App() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={currentJitoSOL || ''}
+                  value={currentJitoSOL}
                   onChange={(e) => setCurrentJitoSOL(e.target.value === '' ? 0 : Number(e.target.value))}
                 />
               </div>

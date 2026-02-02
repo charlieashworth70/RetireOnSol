@@ -12,7 +12,7 @@ export interface DCANotification {
 class NotificationService {
   private isAvailable = false;
   private isNative = false;
-  private webNotificationQueue: Map<number, NodeJS.Timeout> = new Map();
+  private webNotificationQueue: Map<number, ReturnType<typeof setTimeout>> = new Map();
 
   async initialize() {
     this.isNative = Capacitor.isNativePlatform();

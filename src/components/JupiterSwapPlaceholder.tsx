@@ -10,7 +10,9 @@
  * 3. Replace placeholder with embedded terminal
  */
 
+import { useState } from 'react';
 import './JupiterSwapPlaceholder.css';
+import { JupiterTerminal } from './JupiterTerminal';
 
 interface JupiterSwapPlaceholderProps {
   fromToken?: string;
@@ -21,28 +23,27 @@ export function JupiterSwapPlaceholder({
   fromToken = 'SOL',
   toToken = 'JitoSOL',
 }: JupiterSwapPlaceholderProps) {
-  const jupUrl = `https://jup.ag/swap/${fromToken}-${toToken}`;
-
-  const handleSwapClick = () => {
-    window.open(jupUrl, '_blank', 'noopener,noreferrer');
-  };
+  const [showTerminal, setShowTerminal] = useState(false);
 
   return (
-    <div className="jupiter-swap-placeholder">
-      <div className="jupiter-swap-header">
-        <span className="jupiter-icon">⚡</span>
-        <span className="jupiter-title">Jupiter Swap</span>
+    <>
+      <div className="jupiter-swap-placeholder">
+        <div className="jupiter-swap-header">
+          <span className="jupiter-icon">⚡</span>
+          <span className="jupiter-title">Jupiter Swap</span>
+        </div>
+        <p className="jupiter-description">
+          Swap directly in-app via Jupiter.
+        </p>
+        <button
+          type="button"
+          className="jupiter-swap-btn"
+          onClick={() => setShowTerminal(true)}
+        >
+          Swap {fromToken} → {toToken}
+        </button>
       </div>
-      <p className="jupiter-description">
-        In-app swap coming soon. For now, swap on Jupiter directly.
-      </p>
-      <button
-        type="button"
-        className="jupiter-swap-btn"
-        onClick={handleSwapClick}
-      >
-        Swap {fromToken} → {toToken} on Jupiter ↗
-      </button>
-    </div>
+      {showTerminal && <JupiterTerminal onClose={() => setShowTerminal(false)} />}
+    </>
   );
 }

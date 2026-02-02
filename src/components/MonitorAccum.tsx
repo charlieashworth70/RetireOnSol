@@ -213,7 +213,18 @@ export function MonitorAccum({
               <br />
               You&apos;ve missed{' '}
               <strong>{formatUSD(actualMissedTotal)}</strong> in planned
-              purchases
+              purchases.
+              
+              {/* Show Jupiter Swap if we are behind on JitoSOL balance */}
+              {connected && (
+                <div style={{ marginTop: '12px' }}>
+                  <JupiterSwapPlaceholder 
+                    fromToken="SOL" 
+                    toToken="JitoSOL" 
+                  />
+                </div>
+              )}
+
               {onMarkDCAComplete && actualMissed.length > 0 && (
                 <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {actualMissed.slice(-3).reverse().map((date) => (

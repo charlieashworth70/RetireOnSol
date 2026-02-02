@@ -8,6 +8,8 @@ import {
   type GrowthModel,
   type GrowthModelParams,
 } from './utils/calculations';
+import { calculateDCASchedule } from './utils/dcaSchedule';
+import { notificationService } from './services/notificationService';
 import { getModelDisplayName, getModelDescription, getFuturePowerLawFairValue, type CAGRDecayType } from './utils/growthModels';
 import { toTodaysDollars, type InflationParams } from './utils/inflation';
 import { runMonteCarloSimulation, type MonteCarloParams, type MonteCarloResult, type VolatilityDecayType } from './utils/monteCarlo';
@@ -47,6 +49,7 @@ function App() {
   // Active plan state
   const [activePlan, setActivePlan] = useState<ActivePlan | null>(() => loadActivePlan());
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showExecuteModal, setShowExecuteModal] = useState(false);
 
   // Spend Now mode - skip grow phase and go straight to spend
   const [spendNowMode, setSpendNowMode] = useState(false);
@@ -110,6 +113,29 @@ function App() {
 
   // Reset key - incremented when Reset All Settings is clicked to trigger SpendTab reset
   const [resetKey, setResetKey] = useState(0);
+
+  // Demo Mode: Check for due notifications when time advances
+  useEffect(() => {
+    if (demo.enabled && activePlan && demo.demoDate) {
+      const schedule = calculateDCASchedule(
+        activePlan.activatedAt,
+        activePlan.settings.dcaFrequency,
+        activePlan.settings.dcaAmountUSD,
+        demo.demoDate
+      );
+      
+      const latestDueDate = schedule.allDueDates[schedule.allDueDates.length - 1];
+      
+      // Notify if we have a due date that hasn't been marked complete
+      if (latestDueDate && !demo.completedDCAs.has(latestDueDate.toISOString())) {
+        // Fire notification
+        notificationService.scheduleMissedDCAReminder(
+          activePlan.settings.dcaAmountUSD,
+          Math.max(0, Math.floor((demo.demoDate.getTime() - latestDueDate.getTime()) / (1000 * 60 * 60 * 24)))
+        );
+      }
+    }
+  }, [demo.demoDate, demo.enabled, activePlan, demo.completedDCAs]);
 
   // Fetch SOL price on mount and refresh every 5 minutes
   useEffect(() => {
@@ -205,6 +231,9 @@ function App() {
 
   // Execute Plan handler - saves current settings as active plan
   const executePlan = useCallback(() => {
+    // Reload latest settings from storage to capture changes made in SpendTab
+    const latestSettings = loadSettings();
+
     const currentSettings: StoredSettings = {
       currentSOL,
       currentJitoSOL,
@@ -226,13 +255,14 @@ function App() {
       mcSimulations,
       jitoSOLEnabled,
       jitoSOLAPR,
-      spendMonthlyIncome: DEFAULT_SETTINGS.spendMonthlyIncome,
-      spendMonthlyIncomeMax: DEFAULT_SETTINGS.spendMonthlyIncomeMax,
-      spendRetirementYears: DEFAULT_SETTINGS.spendRetirementYears,
-      spendVolatility: DEFAULT_SETTINGS.spendVolatility,
-      spendRealGrowthRate: DEFAULT_SETTINGS.spendRealGrowthRate,
-      spendInflationRate: DEFAULT_SETTINGS.spendInflationRate,
-      spendSimulations: DEFAULT_SETTINGS.spendSimulations,
+      // Use latest spend settings from storage
+      spendMonthlyIncome: latestSettings.spendMonthlyIncome ?? DEFAULT_SETTINGS.spendMonthlyIncome,
+      spendMonthlyIncomeMax: latestSettings.spendMonthlyIncomeMax ?? DEFAULT_SETTINGS.spendMonthlyIncomeMax,
+      spendRetirementYears: latestSettings.spendRetirementYears ?? DEFAULT_SETTINGS.spendRetirementYears,
+      spendVolatility: latestSettings.spendVolatility ?? DEFAULT_SETTINGS.spendVolatility,
+      spendRealGrowthRate: latestSettings.spendRealGrowthRate ?? DEFAULT_SETTINGS.spendRealGrowthRate,
+      spendInflationRate: latestSettings.spendInflationRate ?? DEFAULT_SETTINGS.spendInflationRate,
+      spendSimulations: latestSettings.spendSimulations ?? DEFAULT_SETTINGS.spendSimulations,
     };
     const plan: ActivePlan = {
       activatedAt: new Date().toISOString(),
@@ -240,6 +270,7 @@ function App() {
     };
     saveActivePlan(plan);
     setActivePlan(plan);
+    setShowExecuteModal(false);
     setMainTab('monitor');
     setMonitorTab('accum');
   }, [currentSOL, currentJitoSOL, years, dcaAmountUSD, dcaMaxLimit, dcaFrequency, growthModel, modelParams, inflationEnabled, inflationType, inflationRate, inflationAmplitude, inflationCyclePeriod, debasementRate, mcEnabled, mcVolatility, mcVolatilityDecay, mcSimulations, jitoSOLEnabled, jitoSOLAPR]);
@@ -275,6 +306,16 @@ function App() {
 
   // Import from wallet handler
   const importFromWallet = useCallback(() => {
+    // In Demo Mode, simulate wallet import with demo balances
+    if (demo.enabled) {
+      setCurrentSOL(demo.solBalance);
+      setCurrentJitoSOL(demo.jitoSolBalance);
+      setWalletImported(true);
+      if (walletImportTimerRef.current) clearTimeout(walletImportTimerRef.current);
+      walletImportTimerRef.current = setTimeout(() => setWalletImported(false), 3000);
+      return;
+    }
+
     if (connected && walletBalance !== null) {
       // Already connected — import immediately
       setCurrentSOL(walletBalance);
@@ -1250,47 +1291,60 @@ function App() {
           </>
         )}
 
-        {/* Execute Plan Button - shown at bottom of Plan tab */}
-        {mainTab === 'plan' && (
+        {/* Navigation Buttons */}
+        {mainTab === 'plan' && planTab === 'grow' && !spendNowMode && (
           <div className="execute-plan-container">
             <button
               type="button"
               className="execute-plan-btn"
-              onClick={executePlan}
+              onClick={() => setPlanTab('spend')}
+              style={{ background: 'transparent', border: '1px solid var(--sol-purple)', color: 'var(--sol-purple)' }}
             >
-              🚀 Execute Plan
+              Next: Plan Spend Strategy →
             </button>
-            <p className="execute-plan-hint">
-              Save your current plan settings and start tracking progress
-            </p>
           </div>
         )}
 
         {/* SPEND TAB */}
         {mainTab === 'plan' && planTab === 'spend' && (
-          <SpendTab
-            startingSOL={
-              spendNowMode
-                ? currentSOL
-                : (mcEnabled && mcResult ? mcResult.finalSolP50 : (projection?.finalSOL || 0))
-            }
-            startingPrice={
-              spendNowMode
-                ? (currentPrice || 0)
-                : (projection?.finalPrice || 0)
-            }
-            startingValueUSD={
-              spendNowMode
-                ? (currentSOL * (currentPrice || 0))
-                : (mcEnabled && mcResult
-                    ? (inflationEnabled ? inflationAdjustmentFn(mcResult.finalP50, years) : mcResult.finalP50)
-                    : (inflationEnabled && todaysDollarsValue ? todaysDollarsValue : (projection?.finalValueUSD || 0)))
-            }
-            defaultInflationRate={inflationRate}
-            defaultVolatility={mcVolatility}
-            defaultSimulations={mcSimulations}
-            resetKey={resetKey}
-          />
+          <>
+            <SpendTab
+              startingSOL={
+                spendNowMode
+                  ? currentSOL
+                  : (mcEnabled && mcResult ? mcResult.finalSolP50 : (projection?.finalSOL || 0))
+              }
+              startingPrice={
+                spendNowMode
+                  ? (currentPrice || 0)
+                  : (projection?.finalPrice || 0)
+              }
+              startingValueUSD={
+                spendNowMode
+                  ? (currentSOL * (currentPrice || 0))
+                  : (mcEnabled && mcResult
+                      ? (inflationEnabled ? inflationAdjustmentFn(mcResult.finalP50, years) : mcResult.finalP50)
+                      : (inflationEnabled && todaysDollarsValue ? todaysDollarsValue : (projection?.finalValueUSD || 0)))
+              }
+              defaultInflationRate={inflationRate}
+              defaultVolatility={mcVolatility}
+              defaultSimulations={mcSimulations}
+              resetKey={resetKey}
+            />
+            
+            <div className="execute-plan-container">
+              <button
+                type="button"
+                className="execute-plan-btn"
+                onClick={() => setShowExecuteModal(true)}
+              >
+                🚀 Execute Plan
+              </button>
+              <p className="execute-plan-hint">
+                Save your plan and start tracking progress
+              </p>
+            </div>
+          </>
         )}
         {/* MONITOR TAB */}
         {mainTab === 'monitor' && (
@@ -1454,6 +1508,70 @@ function App() {
               </>
             )}
           </>
+        )}
+
+        {showExecuteModal && (
+          <div className="cancel-modal-overlay">
+            <div className="cancel-modal" style={{ borderColor: '#14F195', boxShadow: '0 8px 40px rgba(20, 241, 149, 0.2)' }}>
+              <div className="cancel-modal-header" style={{ background: 'rgba(20, 241, 149, 0.1)', borderBottomColor: 'rgba(20, 241, 149, 0.2)' }}>
+                <div className="cancel-modal-icon">🚀</div>
+                <h2 style={{ color: '#14F195' }}>Execute Plan?</h2>
+              </div>
+              <div className="cancel-modal-body">
+                <div className="cancel-stats-row">
+                  <div className="cancel-stat">
+                    <span className="cancel-stat-label">Accumulation</span>
+                    <span className="cancel-stat-value cancel-stat-green">{years} Years</span>
+                    <span className="cancel-stat-sub">DCA {formatUSD(dcaAmountUSD)} / {dcaFrequency}</span>
+                  </div>
+                  <div className="cancel-stat">
+                    <span className="cancel-stat-label">Retirement</span>
+                    <span className="cancel-stat-value cancel-stat-green">
+                      {loadSettings().spendRetirementYears ?? DEFAULT_SETTINGS.spendRetirementYears} Years
+                    </span>
+                    <span className="cancel-stat-sub">
+                      Withdraw {formatUSD(loadSettings().spendMonthlyIncome ?? DEFAULT_SETTINGS.spendMonthlyIncome)}/mo
+                    </span>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.9rem', color: '#ccc', textAlign: 'center', margin: '0' }}>
+                  This will save your plan and start tracking your progress against these targets.
+                </p>
+                <div className="cancel-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowExecuteModal(false)}
+                    style={{
+                      padding: '12px',
+                      background: 'transparent',
+                      border: '1px solid #555',
+                      borderRadius: '8px',
+                      color: '#ccc',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={executePlan}
+                    style={{
+                      padding: '12px',
+                      background: 'linear-gradient(135deg, var(--sol-purple), var(--sol-green))',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Confirm & Execute
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </main>
 

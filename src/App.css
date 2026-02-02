@@ -69,10 +69,10 @@ body {
 }
 
 .header-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(153, 69, 255, 0.3);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  /* Removed shadow to look cleaner on web */
 }
 
 .header-title-group {

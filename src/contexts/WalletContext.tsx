@@ -10,6 +10,10 @@ import {
   createDefaultAuthorizationResultCache,
   createDefaultWalletNotFoundHandler,
 } from '@solana-mobile/wallet-adapter-mobile';
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+} from '@solana/wallet-adapter-wallets';
 
 // Default styles for the wallet modal
 import '@solana/wallet-adapter-react-ui/styles.css';
@@ -28,9 +32,14 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
   // Phantom's public RPC — more reliable than api.mainnet-beta.solana.com (heavily rate-limited)
   const endpoint = useMemo(() => 'https://solana-mainnet.phantom.app/YBPpkkN4g91xDiAnTE9r0RcMkjg0sKUIWvAfoFVJ', []);
 
-  // On desktop: empty array lets Wallet Standard auto-detect Phantom, Solflare, Backpack etc.
-  // On mobile Android: add MWA adapter so it can connect to mobile wallets via MWA protocol
   const wallets = useMemo(() => {
+    // Standard adapters for browser/in-app browser support
+    const standards = [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+    ];
+
+    // On Android, add MWA adapter for native app support
     if (isMobileAndroid()) {
       return [
         new SolanaMobileWalletAdapter({
@@ -44,10 +53,11 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
           cluster: 'mainnet-beta',
           onWalletNotFound: createDefaultWalletNotFoundHandler(),
         }),
+        ...standards,
       ];
     }
-    // Desktop + iOS: rely on Wallet Standard auto-detection
-    return [];
+    
+    return standards;
   }, []);
 
   return (

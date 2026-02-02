@@ -93,6 +93,7 @@ function App() {
   // Inflation & Debasement state (with localStorage defaults)
   const [inflationEnabled, setInflationEnabled] = useState(initialSettings.inflationEnabled ?? DEFAULT_SETTINGS.inflationEnabled);
   const [inflationExpanded, setInflationExpanded] = useState(false);
+  const [jitoSOLExpanded, setJitoSOLExpanded] = useState(false);
   const [inflationType, setInflationType] = useState<'linear' | 'cyclical'>(initialSettings.inflationType ?? DEFAULT_SETTINGS.inflationType);
   const [inflationRate, setInflationRate] = useState(initialSettings.inflationRate ?? DEFAULT_SETTINGS.inflationRate);
   const [inflationAmplitude, setInflationAmplitude] = useState(initialSettings.inflationAmplitude ?? DEFAULT_SETTINGS.inflationAmplitude);
@@ -673,56 +674,6 @@ function App() {
           </div>
         </section>
 
-        {/* JitoSOL Staking Toggle */}
-        {!spendNowMode && (
-          <section className="input-section jitosol-section">
-            <div className="jitosol-toggle">
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  checked={jitoSOLEnabled}
-                  onChange={(e) => setJitoSOLEnabled(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-              </label>
-              <div className="toggle-text">
-                <span className="toggle-label">Stake to JitoSOL</span>
-                <span className="toggle-hint">
-                  {jitoSOLEnabled
-                    ? `Earning ~${(jitoSOLAPR * 100).toFixed(1)}% APR compounding on SOL balance`
-                    : 'Earn staking yield on your SOL holdings'}
-                </span>
-              </div>
-            </div>
-
-            {jitoSOLEnabled && (
-              <div className="jitosol-params">
-                <div className="input-group slider-group">
-                  <label htmlFor="jitoSOLAPR">
-                    JitoSOL APR: <span className="slider-value">{(jitoSOLAPR * 100).toFixed(1)}%</span>
-                  </label>
-                  <input
-                    id="jitoSOLAPR"
-                    type="range"
-                    min="3"
-                    max="12"
-                    step="0.5"
-                    value={jitoSOLAPR * 100}
-                    onChange={(e) => setJitoSOLAPR(Number(e.target.value) / 100)}
-                  />
-                  <div className="slider-labels">
-                    <span>3%</span>
-                    <span className="slider-marker" style={{ left: '50%' }}>7.5% current</span>
-                    <span>12%</span>
-                  </div>
-                  <span className="input-hint">
-                    JitoSOL earns MEV-boosted staking rewards. Current APR ~7-8%. Compounds your SOL balance annually.
-                  </span>
-                </div>
-              </div>
-            )}
-          </section>
-        )}
 
         {!spendNowMode && (
           <>
@@ -924,6 +875,61 @@ function App() {
             </>
           )}
 
+          </div>
+        </section>
+
+        {/* JitoSOL Staking Collapsible Section */}
+        <section className="inflation-section">
+          <div className={`inflation-toggle ${jitoSOLEnabled ? 'enabled' : ''} ${jitoSOLExpanded ? 'expanded-below' : ''}`}>
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={jitoSOLEnabled}
+                onChange={(e) => setJitoSOLEnabled(e.target.checked)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+            <div className="toggle-text">
+              <span className="toggle-label">Stake to JitoSOL</span>
+              <span className="inflation-summary">
+                {!jitoSOLEnabled
+                  ? 'Off'
+                  : `~${(jitoSOLAPR * 100).toFixed(1)}% APR compounding`}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="toggle-arrow-btn"
+              onClick={() => setJitoSOLExpanded(!jitoSOLExpanded)}
+              aria-label={jitoSOLExpanded ? 'Collapse' : 'Expand'}
+            >
+              <span className={`toggle-arrow ${jitoSOLExpanded ? 'expanded' : ''}`}>▼</span>
+            </button>
+          </div>
+
+          <div className={`inflation-content ${jitoSOLExpanded ? 'expanded' : ''}`}>
+            <div className="input-group slider-group">
+              <label htmlFor="jitoSOLAPR">
+                JitoSOL APR: <span className="slider-value">{(jitoSOLAPR * 100).toFixed(1)}%</span>
+              </label>
+              <input
+                id="jitoSOLAPR"
+                type="range"
+                min="3"
+                max="12"
+                step="0.5"
+                value={jitoSOLAPR * 100}
+                onChange={(e) => setJitoSOLAPR(Number(e.target.value) / 100)}
+              />
+              <div className="slider-labels">
+                <span>3%</span>
+                <span className="slider-marker" style={{ left: '50%' }}>7.5% current</span>
+                <span>12%</span>
+              </div>
+              <span className="input-hint">
+                JitoSOL earns MEV-boosted staking rewards. Current APR ~7-8%. Compounds your SOL balance annually.
+              </span>
+            </div>
           </div>
         </section>
 

@@ -69,14 +69,23 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
   }
 }
 
-// Register service worker for PWA
+// UNREGISTER any old service workers (they have bad cache entries)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const base = import.meta.env.BASE_URL || '/';
-    navigator.serviceWorker.register(`${base}sw.js`).catch((err) => {
-      console.log('ServiceWorker registration failed:', err);
-    });
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      console.log('Unregistering old service worker...');
+      registration.unregister();
+    }
   });
+  // Clear all caches
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      for (const name of names) {
+        console.log('Deleting cache:', name);
+        caches.delete(name);
+      }
+    });
+  }
 }
 
 // Simple path-based router

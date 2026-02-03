@@ -160,14 +160,16 @@ export function MonitorAccum({
         )}
       </div>
 
-      {/* ── Quick Swap ── */}
-      <div className="monitor-accum-section">
-        <h3>⚡ Quick Swap</h3>
-        <JupiterSwapPlaceholder 
-          fromToken="SOL" 
-          toToken="JitoSOL" 
-        />
-      </div>
+      {/* ── Quick Swap (only when connected) ── */}
+      {connected && (
+        <div className="monitor-accum-section">
+          <h3>⚡ Quick Swap</h3>
+          <JupiterSwapPlaceholder 
+            fromToken="SOL" 
+            toToken="JitoSOL" 
+          />
+        </div>
+      )}
 
       {/* ── DCA Schedule ── */}
       <div className="monitor-accum-section">
@@ -249,15 +251,6 @@ export function MonitorAccum({
             No DCA payments due yet — your first one is coming up!
           </p>
         )}
-      </div>
-
-      {/* ── Quick Swap ── */}
-      <div className="monitor-accum-section">
-        <h3>⚡ Quick Swap</h3>
-        <JupiterSwapPlaceholder 
-          fromToken="SOL" 
-          toToken="JitoSOL" 
-        />
       </div>
 
       {/* ── Progress Tracker ── */}

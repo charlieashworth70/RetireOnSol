@@ -72,7 +72,7 @@ export function JupiterTerminal({ onClose }: { onClose: () => void }) {
       console.error('[Jupiter] Failed to load script from plugin.jup.ag');
     };
     document.head.appendChild(script);
-  }, []);
+  }, [wallet]);
 
   return (
     <div 
